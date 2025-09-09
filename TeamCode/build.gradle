@@ -11,18 +11,59 @@
 
 // Custom definitions may go here
 
+// Fast Load -----------------
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url = 'https://www.matthewo.tech/maven/'
+        }
+    }
+    dependencies {
+        classpath 'org.team11260:fast-load-plugin:0.1.3'
+    }
+}
+// Fast Load -----------------
+
 // Include common definitions from above.
 apply from: '../build.common.gradle'
 apply from: '../build.dependencies.gradle'
+apply plugin: 'org.team11260.fast-load-plugin' // Fast Load
+apply plugin: 'org.jetbrains.kotlin.android' // Panels
 
 android {
     namespace = 'org.firstinspires.ftc.teamcode'
+
+    kotlinOptions { // Panels
+        jvmTarget = '1.8'
+    }
+    compileSdk 34 // Panels
+    defaultConfig { // Panels
+        minSdk 24
+    }
 
     packagingOptions {
         jniLibs.useLegacyPackaging true
     }
 }
 
+repositories {
+    maven { // Roadrunner
+        url = 'https://maven.brott.dev/'
+    }
+    maven { // Fast Load
+        url = 'https://www.matthewo.tech/maven/'
+    }
+}
+
 dependencies {
     implementation project(':FtcRobotController')
+    // Roadrunner -----------------
+    implementation "com.acmerobotics.roadrunner:ftc:0.1.23"
+    implementation "com.acmerobotics.roadrunner:core:1.0.1"
+    implementation "com.acmerobotics.roadrunner:actions:1.0.1"
+    implementation "com.acmerobotics.dashboard:dashboard:0.4.17"
+    // Roadrunner -----------------
+    implementation 'org.team11260:fast-load:0.1.3' // Fast Load
+    implementation "com.bylazar:fullpanels:1.0.6" // Panels
 }
