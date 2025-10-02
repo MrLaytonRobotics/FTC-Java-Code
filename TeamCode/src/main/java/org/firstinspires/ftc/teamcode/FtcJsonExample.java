@@ -52,8 +52,12 @@ public class FtcJsonExample extends LinearOpMode {
 		boolean read = storage.readAndParseAutoData("autoData.json", artifactSequence, coords, motorPositions, dateMs);
 
 		while (opModeIsActive()) {
-			for (int i = 0; i < fileNames.length; i++) {
-				telemetry.addData("File", fileNames[i]);
+			try {
+				for (int i = 0; i < fileNames.length; i++) {
+					telemetry.addData("File", fileNames[i]);
+				}
+			} catch (Exception err) {
+				telemetry.addData("Exception", err);
 			}
 			telemetry.addData("JSON", jsonContent);
 			telemetry.addData("read", read);

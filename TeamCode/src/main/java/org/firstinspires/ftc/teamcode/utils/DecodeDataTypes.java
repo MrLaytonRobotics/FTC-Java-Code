@@ -65,6 +65,10 @@ public class DecodeDataTypes {
             }
             return stringArray;
         }
+
+        public boolean hasValues() {
+            return sequence[0] == null && sequence[1] == null && sequence[2] == null;
+        }
     }
 
     public static class Coords {

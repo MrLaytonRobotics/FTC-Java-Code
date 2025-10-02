@@ -153,8 +153,9 @@ public class AprilTags extends LinearOpMode {
             telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
             telemetry.addLine("RBE = Range, Bearing & Elevation");
             */
-            telemetry.addData("Blue Goal Tag Detected:", detectsBlueTag);
-            telemetry.addData("Red Goal Tag Detected:", detectsRedTag);
+            telemetry.addData("Blue Goal Tag Detected", detectsBlueTag);
+            telemetry.addData("Red Goal Tag Detected", detectsRedTag);
+            telemetry.addData("Found Artifact Pattern", artifactSequence.hasValues());
             //telemetry.addData("Artifact Color", artifactColors[i]);
 
 
