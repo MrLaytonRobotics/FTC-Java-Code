@@ -51,16 +51,15 @@ public class riptideUtil {
     public static int CAMERA_HEIGHT = 480;
     public static double CAMERA_ANGLE = 0;
 
-
-
     public static double DETECTION_TIMEOUT = 25e+7;
-
     public static double ARTIFACT_SIZE_INCHES = 5;
 
     public static double LENS_FOCAL_LEN_INCHES = 0.15748;
     public static double SENSOR_HEIGHT = 0.086;
     public static double HORIZ_FOV = 55;
     public static double VERT_FOV = 55;
+
+    public static double MOTOR_POS_CONST = 1; // needs tuning
 
     public static AprilTagLibrary getLibrary() {
         return new AprilTagLibrary.Builder()

@@ -61,8 +61,8 @@ public class TestVision extends LinearOpMode {
 
     @SuppressLint("DefaultLocale")
     public void telemetryStuff(Camera camera) {
-        List<AprilTagDetection> detections = camera.get_tag_detections();
-        ArrayList<ArrayList<Double>> color_blobs = camera.get_blob_detections();
+        List<AprilTagDetection> detections = camera.getTagDetections();
+        ArrayList<ArrayList<Double>> color_blobs = camera.getBlobDetections();
 
         telemetry.addLine(String.format(" --- %d AprilTags Detected --- ", detections.size()));
 
@@ -75,9 +75,7 @@ public class TestVision extends LinearOpMode {
                             detection.robotPose.getPosition().y,
                             detection.robotPose.getPosition().z));
                     telemetry.addLine(String.format("Distance %f (inch)",
-                            Math.sqrt(detection.robotPose.getPosition().x*detection.robotPose.getPosition().x
-                            +detection.robotPose.getPosition().y*detection.robotPose.getPosition().y
-                            +detection.robotPose.getPosition().z*detection.robotPose.getPosition().z)));
+                            camera.getAprilTagDistance(detection)));
                     telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)",
                             detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES),
                             detection.robotPose.getOrientation().getRoll(AngleUnit.DEGREES),

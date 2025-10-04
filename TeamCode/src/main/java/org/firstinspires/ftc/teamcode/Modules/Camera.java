@@ -124,7 +124,7 @@ public class Camera {
                 .build();
     }
 
-    public List<AprilTagDetection> getTagDetections() {
+    public ArrayList<AprilTagDetection> getTagDetections() {
         detections = tag_processor.getDetections();
         detections.removeIf(detection -> System.nanoTime() - detection.frameAcquisitionNanoTime > riptideUtil.DETECTION_TIMEOUT);
         return detections;
@@ -190,6 +190,28 @@ public class Camera {
             }
         }
         return null;
+    }
+
+    public double getAprilTagDistance(AprilTagDetection tag) {
+        return Math.pow(tag.robotPose.getPosition().x, 2) *
+               Math.pow(tag.robotPose.getPosition().y, 2) *
+               Math.pow(tag.robotPose.getPosition().z, 2);
+    }
+
+    public double getTagHorizonalAngle(AprilTagDetection tag) {
+        /*
+         * Gets the angle of the april tag relative to the camera.
+         */
+        double distance = this.getAprilTagDistance(tag);
+
+        // essentially setting the origin to the center of the screen
+        double delta_x = (double) riptideUtil.CAMERA_WIDTH / 2 - tag.center.x;
+
+        // relative to the camera
+        double horizontal_distance = delta_x * riptideUtil.HORIZ_FOV / riptideUtil.CAMERA_WIDTH;
+
+        //the angle of the april tag relative to the camera
+        return Math.atan(horizontal_distance/distance);
     }
 
     public EditablePose2D findNearestArtifact() {
