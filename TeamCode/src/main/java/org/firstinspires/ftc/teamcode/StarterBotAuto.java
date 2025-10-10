@@ -1,4 +1,4 @@
-/*
+package org.firstinspires.ftc.teamcode;/*
  * Copyright (c) 2025 Base 10 Assets, LLC
  * All rights reserved.
  *
@@ -59,7 +59,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * main robot "loop," continuously checking for conditions that allow us to move to the next step.
  */
 
-@Autonomous(name="StarterBotAuto", group="StarterBot")
+@Autonomous(name="org.firstinspires.ftc.teamcode.StarterBotAuto", group="StarterBot")
 //@Disabled
 public class StarterBotAuto extends OpMode
 {
