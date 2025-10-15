@@ -25,8 +25,14 @@ public abstract class Base extends LinearOpMode {
 		while (opModeIsActive()) {
 			drivebase.update(gamepad1);
 			intake.update(gamepad1);
+			leverTransfer.update(gamepad1);
+			spindexer.update();
 
-			// todo: add telemetry
+			telemetry.addLine(drivebase.getTelemetryData());
+			telemetry.addLine(intake.getTelemetryData());
+			telemetry.addLine(leverTransfer.getTelemetryData());
+			telemetry.addLine(spindexer.getTelemetryData());
+
 			telemetry.update();
 		}
 	}

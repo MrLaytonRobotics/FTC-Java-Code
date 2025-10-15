@@ -62,4 +62,8 @@ public final class Drivebase {
         leftBackDrive.setPower(leftBackPower);
         rightBackDrive.setPower(rightBackPower);
     }
+
+    public String getTelemetryData() {
+        return String.format("Left Front: %f\nRight Front: %f\nLeft Back: %f\nRight Back: %f", leftFrontDrive.getPower(), rightFrontDrive.getPower(), leftBackDrive.getPower(), rightBackDrive.getPower());
+    }
 }

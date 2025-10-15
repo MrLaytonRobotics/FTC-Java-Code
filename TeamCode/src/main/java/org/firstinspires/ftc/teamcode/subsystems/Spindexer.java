@@ -13,4 +13,8 @@ public final class Spindexer {
 	public void update() {
 		// todo
 	}
+
+	public String getTelemetryData() {
+		return String.format("Spindexer Position: %f", spindexer.getPosition());
+	}
 }

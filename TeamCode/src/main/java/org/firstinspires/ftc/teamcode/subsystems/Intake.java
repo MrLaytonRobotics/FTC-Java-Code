@@ -22,4 +22,8 @@ public final class Intake {
 
 		intake.setPower(intakeSpeed);
 	}
+
+	public String getTelemetryData() {
+		return String.format("Intake Speed: %f", intakeSpeed);
+	}
 }

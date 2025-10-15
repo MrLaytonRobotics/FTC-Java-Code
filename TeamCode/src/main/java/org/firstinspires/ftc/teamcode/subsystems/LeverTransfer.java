@@ -38,4 +38,8 @@ public final class LeverTransfer {
 
 		leverTransfer.setPosition(leverTargetIsUpPosition ? leverUpPosition : leverDownPosition);
 	}
+
+	public String getTelemetryData() {
+		return String.format("Lever Up Position: %f\nLever Is Up: %f", leverUpPosition, leverTargetIsUpPosition);
+	}
 }
