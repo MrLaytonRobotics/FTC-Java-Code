@@ -56,8 +56,9 @@ public class DecodeRi3D extends OpMode {
     double launcherTarget = LAUNCHER_CLOSE_TARGET_VELOCITY; //These variables allow
     double launcherMin = LAUNCHER_CLOSE_MIN_VELOCITY;
 
-    final double LEFT_POSITION = 0.2962; //the left and right position for the diverter servo
-    final double RIGHT_POSITION = 0;
+    //final double LEFT_POSITION = 0.2962; //the left and right position for the diverter servo
+    final double LEFT_POSITION = 0.555; //the left and right position for the diverter servo
+    final double RIGHT_POSITION = 0.08;
 
     // Declare OpMode members.
     private DcMotor leftFrontDrive = null;
@@ -118,10 +119,10 @@ public class DecodeRi3D extends OpMode {
         leftLaunchState = LaunchState.IDLE;
         rightLaunchState = LaunchState.IDLE;
 
-        leftFrontDrive = hardwareMap.get(DcMotor.class, "left_front_drive");
-        rightFrontDrive = hardwareMap.get(DcMotor.class, "right_front_drive");
-        leftBackDrive = hardwareMap.get(DcMotor.class, "left_back_drive");
-        rightBackDrive = hardwareMap.get(DcMotor.class, "right_back_drive");
+        leftFrontDrive = hardwareMap.get(DcMotor.class, "lfd");
+        rightFrontDrive = hardwareMap.get(DcMotor.class, "rfd");
+        leftBackDrive = hardwareMap.get(DcMotor.class, "lrd");
+        rightBackDrive = hardwareMap.get(DcMotor.class, "rrd");
         leftLauncher = hardwareMap.get(DcMotorEx.class, "left_launcher");
         rightLauncher = hardwareMap.get(DcMotorEx.class, "right_launcher");
         intake = hardwareMap.get(DcMotor.class, "intake");
@@ -136,12 +137,12 @@ public class DecodeRi3D extends OpMode {
          * Note: The settings here assume direct drive on left and right wheels. Gear
          * Reduction or 90 Deg drives may require direction flips
          */
-        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
 
-        leftLauncher.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightLauncher.setDirection(DcMotorSimple.Direction.REVERSE);
 
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -174,6 +175,11 @@ public class DecodeRi3D extends OpMode {
          * both work to feed the ball into the robot.
          */
         rightFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        /*
+         * Set the diverter to the correct direction
+         */
+        diverter.setPosition(RIGHT_POSITION);
 
         /*
          * Tell the driver that initialization is complete.
@@ -267,8 +273,10 @@ public class DecodeRi3D extends OpMode {
          */
         telemetry.addData("State", leftLaunchState);
         telemetry.addData("launch distance", launcherDistance);
-        telemetry.addData("Left Launcher Velocity", leftLauncher.getVelocity());
-        telemetry.addData("Right Launcher Velocity", rightLauncher.getVelocity());
+        telemetry.addData("Left Launcher Velocity", Math.abs(leftLauncher.getVelocity()));
+        telemetry.addData("Right Launcher Velocity", Math.abs(leftLauncher.getVelocity()));
+        telemetry.addData("Diverter Direction", diverterDirection);
+        telemetry.addData("Diverter Position", diverter.getPosition());
         telemetry.update();
 
     }
@@ -310,7 +318,7 @@ public class DecodeRi3D extends OpMode {
             case SPIN_UP:
                 leftLauncher.setVelocity(launcherTarget);
                 rightLauncher.setVelocity(launcherTarget);
-                if (leftLauncher.getVelocity() > launcherMin) {
+                if (Math.abs(leftLauncher.getVelocity()) > launcherMin) {
                     leftLaunchState = LaunchState.LAUNCH;
                 }
                 break;
@@ -338,7 +346,7 @@ public class DecodeRi3D extends OpMode {
             case SPIN_UP:
                 leftLauncher.setVelocity(launcherTarget);
                 rightLauncher.setVelocity(launcherTarget);
-                if (leftLauncher.getVelocity() > launcherMin) {
+                if (Math.abs(leftLauncher.getVelocity()) > launcherMin) {
                     rightLaunchState = LaunchState.LAUNCH;
                 }
                 break;
