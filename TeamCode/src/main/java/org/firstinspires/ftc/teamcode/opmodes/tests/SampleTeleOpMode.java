@@ -51,6 +51,18 @@ public class SampleTeleOpMode extends LinearOpMode {
             if (gamepad1.start){
                 mecanumCommand.resetPinPointOdometry();
             }
+
+            if (gamepad1.x){
+                hw.intake.setPower(1);
+            } else {
+                hw.intake.setPower(0);
+            }
+
+            if (gamepad1.a){
+                hw.shooter.setPower(1);
+            } else {
+                hw.shooter.setPower(0);
+            }
         }
 
     }
