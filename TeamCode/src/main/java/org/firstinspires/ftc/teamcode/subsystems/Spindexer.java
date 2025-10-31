@@ -19,7 +19,7 @@ public final class Spindexer extends Subsystem {
 
 	private Spindexer() {}
 
-	private final static double DEGREES_TO_SERVO = 1.0 / 315.0;
+	private final static double DEGREES_TO_SERVO = 1.0 / 320.0;
 	private int selectedSegment = 0;
 	private boolean isIntakePosition = true;
 	private final static double SPINDEXER_OFFSET = 20.0;

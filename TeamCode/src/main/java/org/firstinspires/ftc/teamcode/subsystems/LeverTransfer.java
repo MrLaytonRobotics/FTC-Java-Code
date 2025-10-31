@@ -22,8 +22,8 @@ public final class LeverTransfer extends Subsystem {
 
 	private StellarServo leverTransferServo;
 
-	private final static double LEVER_DOWN_POSITION = 0.28;
-	private final static double LEVER_UP_POSITION = 0.0;
+	public final static double LEVER_DOWN_POSITION = 0.28;
+	public final static double LEVER_UP_POSITION = 0.0;
 
 	private boolean isLeverTargetUp = false;
 
@@ -34,7 +34,7 @@ public final class LeverTransfer extends Subsystem {
 
 	@Override
 	public void setGamepads(Gamepad gamepad1, Gamepad gamepad2) {
-		setDefaultDirective(new DefaultLeverTransfer(this, gamepad1));
+		setDefaultDirective(new DefaultLeverTransfer(this, gamepad1, leverTransferServo));
 	}
 
 	@Override

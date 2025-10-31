@@ -16,8 +16,8 @@ public final class Drivebase extends Subsystem {
 
     private Drivebase() {}
 
-    private final static double CARDINAL_SPEED = 1.00;
-    private final static double TURN_SPEED = 1.00;
+    private final static double CARDINAL_SPEED = 0.70;
+    private final static double TURN_SPEED = 0.70;
 
     private DcMotorEx leftFrontDrive, leftBackDrive, rightFrontDrive, rightBackDrive;
 

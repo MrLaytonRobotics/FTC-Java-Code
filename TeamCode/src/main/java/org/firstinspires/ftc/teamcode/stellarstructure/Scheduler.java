@@ -27,6 +27,9 @@ public class Scheduler {
 	private final List<Runnable> activeRunnables = new ArrayList<>();
 	private final List<Trigger> activeTriggers = new ArrayList<>();
 
+	private final List<Runnable> runnablesToAdd = new ArrayList<>();
+	private final List<Runnable> runnablesToRemove = new ArrayList<>();
+
 	public void addSubsystem(Subsystem subsystem) {
 		subsystems.add(subsystem);
 	}
@@ -54,9 +57,7 @@ public class Scheduler {
 		boolean didInterrupt = false;
 
 		// for every running directive
-		for (Iterator<Runnable> iterator = this.activeRunnables.iterator(); iterator.hasNext();) {
-			Runnable activeRunnable = iterator.next();
-
+		for (Runnable activeRunnable : this.activeRunnables) {
 			// check for conflicts
 			CONFLICT_CHECK:
 			// for every subsystem required by the new directive
@@ -73,7 +74,7 @@ public class Scheduler {
 							// remove the runnable's triggers
 							activeTriggers.removeAll(activeRunnable.getOwnedTriggers());
 
-							iterator.remove();
+							runnablesToRemove.add(activeRunnable);
 							didInterrupt = true;
 						} else {
 							// running command unable to be interrupted, so can't schedule new directive
@@ -106,10 +107,9 @@ public class Scheduler {
 
 		// check for starting conditions
 		if (!checkStartingConditions(runnableToSchedule)) {
-			this.runnableScheduleQueue.add(runnableToSchedule);
+			this.runnablesToAdd.add(runnableToSchedule);
 			return;
 		}
-
 
 		// try to run
 		if (!startRunnable(runnableToSchedule)) {
@@ -133,6 +133,21 @@ public class Scheduler {
 		// check schedule queue and potentially move directives to running directives
 		checkScheduleQueue();
 
+		//todo: make the queuing system work
+
+		// stop directives
+		for (Iterator<Runnable> iterator = this.runnablesToAdd.iterator(); iterator.hasNext();) {
+			Runnable runnable = iterator.next();
+			this.activeRunnables.remove(runnable);
+			runnable.schedulerStop(true);
+		}
+
+		// start directives
+		for (Runnable runnable : this.runnablesToAdd) {
+			this.activeRunnables.add(runnable);
+			runnable.schedulerStart(false);
+		}
+
 		// check and run all triggers
 		for (Trigger trigger : this.activeTriggers) {
 			if (trigger.check()) {
@@ -141,14 +156,12 @@ public class Scheduler {
 		}
 
 		// update directives and remove finished directives
-		for (Iterator<Runnable> iterator = this.activeRunnables.iterator(); iterator.hasNext();) {
-			Runnable runnable = iterator.next();
+		for (Runnable runnable : this.activeRunnables) {
 			if (runnable.getFinished()) {
 				// remove the runnable's triggers
 				activeTriggers.removeAll(runnable.getOwnedTriggers());
 
-				runnable.schedulerStop(false);
-				iterator.remove();
+				runnablesToRemove.add(runnable);
 			} else {
 				runnable.update();
 			}

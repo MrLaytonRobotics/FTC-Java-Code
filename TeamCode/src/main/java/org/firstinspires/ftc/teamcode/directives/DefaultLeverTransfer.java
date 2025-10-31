@@ -5,12 +5,16 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.stellarstructure.Trigger;
 import org.firstinspires.ftc.teamcode.stellarstructure.conditions.GamepadButton;
 import org.firstinspires.ftc.teamcode.stellarstructure.conditions.StatefulCondition;
+import org.firstinspires.ftc.teamcode.stellarstructure.hardwaremapwrappers.StellarServo;
 import org.firstinspires.ftc.teamcode.stellarstructure.runnables.DefaultDirective;
+import org.firstinspires.ftc.teamcode.stellarstructure.runnables.Procedure;
+import org.firstinspires.ftc.teamcode.stellarstructure.runnables.SetPosition;
+import org.firstinspires.ftc.teamcode.stellarstructure.runnables.Sleep;
 import org.firstinspires.ftc.teamcode.subsystems.LeverTransfer;
 
 public class DefaultLeverTransfer extends DefaultDirective {
 	//todo: implement starting conditions and directives and procedures
-	public DefaultLeverTransfer(LeverTransfer leverTransfer, Gamepad gamepad) {
+	public DefaultLeverTransfer(LeverTransfer leverTransfer, Gamepad gamepad, StellarServo leverTransferServo) {
 		super(leverTransfer);
 
 		addTrigger(new Trigger(
@@ -41,8 +45,14 @@ public class DefaultLeverTransfer extends DefaultDirective {
 						StatefulCondition.Edge.RISING //On initial press
 				),
 				() -> {
-					leverTransfer.toggleLeverPosition();
-					leverTransfer.updateServoPosition();
+					// up down up
+					new Procedure(
+						new SetPosition(leverTransferServo, LeverTransfer.LEVER_DOWN_POSITION, 0.01),
+						new Sleep(0.03),
+						new SetPosition(leverTransferServo, LeverTransfer.LEVER_UP_POSITION, 0.01),
+						new Sleep(0.03),
+						new SetPosition(leverTransferServo, LeverTransfer.LEVER_DOWN_POSITION, 0.01)
+					).schedule();
 				}
 		));
 	}
