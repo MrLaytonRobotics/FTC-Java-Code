@@ -54,7 +54,7 @@ public class Specifications {
 
     public static final String PUSHER = "pusher";
     public static final String TURRET = "turret";
-    public static final String TURN = "turn";
+    public static final String TURN = "sorter";
     public static final String SHOOTER = "shooter";
 
 
