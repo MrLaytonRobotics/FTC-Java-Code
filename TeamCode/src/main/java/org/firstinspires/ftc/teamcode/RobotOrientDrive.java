@@ -44,7 +44,7 @@ public class RobotOrientDrive extends OpMode {
 
         // press button to swing bars, release to return
         if(gamepad1.right_bumper) {
-            bar.pushBall(0.5, 0.1);
+            bar.pushBall(0.55, 0.2);
             telemetry.addData("after push", bar.getBarPosition());
             telemetry.update();
         }
