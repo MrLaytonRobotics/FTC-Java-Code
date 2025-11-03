@@ -11,10 +11,10 @@ public class LinearOpMode_Harish extends com.qualcomm.robotcore.eventloop.opmode
     @Override
     public void runOpMode() throws InterruptedException {
         double fLeftPower, fRightPower, bLeftPower, bRightPower;
-        DcMotor fLeftMotor = hardwareMap.get(DcMotor.class, "frontLeft");
-        DcMotor fRightMotor = hardwareMap.get(DcMotor.class, "frontRight");
-        DcMotor bLeftMotor = hardwareMap.get(DcMotor.class, "backLeft");
-        DcMotor bRightMotor = hardwareMap.get(DcMotor.class, "backRight");
+        DcMotor fLeftMotor = hardwareMap.get(DcMotor.class, "frontleft");
+        DcMotor fRightMotor = hardwareMap.get(DcMotor.class, "frontright");
+        DcMotor bLeftMotor = hardwareMap.get(DcMotor.class, "backleft");
+        DcMotor bRightMotor = hardwareMap.get(DcMotor.class, "backright");
 
         // Positive power, move forward
         //fLeftMotor.setDirection(DcMotorSimple.Direction.FORWARD);

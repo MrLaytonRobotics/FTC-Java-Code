@@ -58,7 +58,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  */
 
 @TeleOp(name="OpMode_Hinaa", group="OpMode")
-@Disabled
 public class OpMode_Hinaa extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 motors.

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 //import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 //import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -8,7 +9,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
-
+@TeleOp
 public class intakeoutake_Amulya {
 
     // INSTANTIATE MOTORS AND SERVOS
