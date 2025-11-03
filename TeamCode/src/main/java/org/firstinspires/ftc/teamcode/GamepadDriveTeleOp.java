@@ -24,13 +24,13 @@ public class GamepadDriveTeleOp extends OpMode {
     @Override
     public void loop() {
 
-        if (gamepad1.rightBumperWasReleased()) {
+        if (gamepad2.rightBumperWasPressed()) {
             boolean eaterStatus = eater.toggle();
             telemetry.addData("Eater (Intake) Status", eaterStatus);
         }
 
-        if (gamepad1.yWasReleased()) {
-            yeeter.launch(gamepad1.yWasPressed(), 67);
+        if (gamepad2.leftBumperWasPressed()) {
+            yeeter.launch(gamepad2.leftBumperWasReleased(), 67);
         }
         double forward = -gamepad1.left_stick_y;
         double right = -gamepad1.left_stick_x;
@@ -38,5 +38,8 @@ public class GamepadDriveTeleOp extends OpMode {
 
         drive.drive(forward, right, rotate);
         telemetry.update();
+
+
+
     }
 }
