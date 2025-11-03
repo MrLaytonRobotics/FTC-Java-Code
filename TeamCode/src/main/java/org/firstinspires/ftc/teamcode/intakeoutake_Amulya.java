@@ -23,7 +23,7 @@ public class intakeoutake_Amulya {
         intake = hardwareMap.get(DcMotor.class, "intake");
         //claw = hardwareMap.get(DcMotor.class, "claw");
         intake.setDirection(DcMotor.Direction.REVERSE);
-        //clawOpen = false;
+        /* clawOpen = false; */
         lastBump = false;
     }
 
