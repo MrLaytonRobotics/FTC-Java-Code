@@ -70,10 +70,12 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     // Declare OpMode members for each of the 4 motors.
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor frontLeftDrive = null;
-    private DcMotor weeltopmotor = null;
     private DcMotor backLeftDrive = null;
     private DcMotor frontRightDrive = null;
     private DcMotor backRightDrive = null;
+
+    // weeltopmotor - this variable is to be used for control of the ball to be thrown
+    private DcMotor weeltopmotor = null;
 
     @Override
     public void runOpMode() {
@@ -115,13 +117,17 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             double axial   = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
             double lateral =  gamepad1.left_stick_x;
             double yaw     =  gamepad1.right_stick_x;
+
+            // Store gamepad button A state to be used later for throw ball
             boolean Throw_ball  = gamepad1.a;
+
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
             double frontLeftPower  = axial + lateral + yaw;
             double frontRightPower = axial - lateral - yaw;
             double backLeftPower   = axial - lateral + yaw;
             double backRightPower  = axial + lateral - yaw;
+            
             boolean weeltopmotor   = Throw_ball;
 
             // Normalize the values so no wheel power exceeds 100%
