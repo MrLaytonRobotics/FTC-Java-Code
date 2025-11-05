@@ -127,7 +127,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             double frontRightPower = axial - lateral - yaw;
             double backLeftPower   = axial - lateral + yaw;
             double backRightPower  = axial + lateral - yaw;
-            
+
             boolean weeltopmotor   = Throw_ball;
 
             // Normalize the values so no wheel power exceeds 100%
