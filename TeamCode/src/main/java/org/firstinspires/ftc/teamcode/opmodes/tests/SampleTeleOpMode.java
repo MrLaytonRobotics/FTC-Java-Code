@@ -58,10 +58,10 @@ public class SampleTeleOpMode extends LinearOpMode {
         // Wait for start button to be pressed
         waitForStart();
 
+        logitechsub.pattern();
+
         // Loop while OpMode is running
         while (opModeIsActive()) {
-            logitechsub.pattern();
-            telemetry.addData("Pattern ", obelisk);
 
 //            if (obelisk == "PPG"){
 //
@@ -135,6 +135,7 @@ public class SampleTeleOpMode extends LinearOpMode {
         telemetry.addData("X", mecanumCommand.getX());
         telemetry.addData("Y", mecanumCommand.getY());
         telemetry.addData("Pusher ON", isPusherUp);
+        telemetry.addData("Pattern ", obelisk);
         telemetry.update();
     }
 }
