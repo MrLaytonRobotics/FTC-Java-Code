@@ -25,6 +25,7 @@ public class Test extends OpMode {
     private PIDController controller, controllerTurret;
     private TelemetryManager telemetryM;
     public static double p = 0.2, i = 0.05, d = 0;
+    public static double pT = 0.028, iT = 0, dT = 0;
     public static double f = 0.0265;
     public static double target = 0;
     private static double vel = 0;
@@ -36,18 +37,18 @@ public class Test extends OpMode {
     private VoltageSensor volt;
     public static double tangle = 40;
     public static double theta = 0;
-    private final int shooterX = 135;
-    private final int shooterY = 135;
+    public static double shooterX = 145;
+    public static double shooterY = 135;
     Servo latch;
     double turretOffset = 0;
     private static final int TICKS_MIN = -330;
     private static final int TICKS_MAX = 990;
-    private static final double TICKS_PER_DEGREE = 1320.0 / 360.0;
+    public static  double TICKS_PER_DEGREES = ((((1.0+(46.0/17.0))) * (1.0+(46.0/11.0))) * 28.0 * 3.0) / 360.0;
 
     @Override
     public void init() {
         controller = new PIDController(p, i, d);
-        controllerTurret = new PIDController(0.028, 0, 0);
+        controllerTurret = new PIDController(pT, iT, dT);
         shooterb = hardwareMap.get(DcMotorEx.class, "sb");
         turret = hardwareMap.get(DcMotorEx.class, "turret");
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -108,16 +109,20 @@ public class Test extends OpMode {
         double distance = Math.sqrt(dx*dx + dy*dy);
         double targetAngleRad = Math.atan2(dy, dx);
         double targetAngleDeg = Math.toDegrees(targetAngleRad) - Math.toDegrees(robotHeading);
-        int targetTicks = (int)Math.round(targetAngleDeg * TICKS_PER_DEGREE);
-        targetTicks = Math.max(TICKS_MIN, Math.min(TICKS_MAX, targetTicks));
-        turretOffset += (gamepad2.right_trigger - gamepad2.left_trigger) * 5;
-        int offsetTicks = (int)(turretOffset * TICKS_PER_DEGREE);
-        int finalTargetTicks = targetTicks + offsetTicks;
+        targetAngleDeg = Math.max(targetAngleDeg, -30);
+        targetAngleDeg = Math.min(targetAngleDeg, 90);
+        telemetry.addData("Target Angle", targetAngleDeg);
+        double turretPos = ((double)turret.getCurrentPosition()) / TICKS_PER_DEGREES;
+        telemetry.addData("Turret Pos", turretPos);
 
-        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        turret.setTargetPosition(finalTargetTicks);
-        double turretPower = controllerTurret.calculate(turret.getCurrentPosition(), finalTargetTicks);
-        turret.setPower(Math.max(-1, Math.min(1, turretPower)));
+//        targetTicks = Math.max(TICKS_MIN, Math.min(TICKS_MAX, targetTicks));
+//        turretOffset += (gamepad2.right_trigger - gamepad2.left_trigger) * 5;
+//        int offsetTicks = (int)(turretOffset * TICKS_PER_DEGREE);
+//        int finalTargetTicks = targetTicks + offsetTicks;
+
+        double turretPower = controllerTurret.calculate(turretPos, targetAngleDeg);
+        telemetry.addData("Power", turretPower);
+        turret.setPower(turretPower);
 
         intake.setPower(gamepad1.right_trigger);
         target = RPM.get(distance);
@@ -127,19 +132,19 @@ public class Test extends OpMode {
         vel = vel * alpha + shooterb.getVelocity() * (2 * Math.PI / 28) * (1 - alpha);
         double pid = controller.calculate(vel, target);
         pid = Math.max(-presentVoltage, Math.min(pid, presentVoltage));
-        shooterb.setPower((pid + f * target) / presentVoltage);
-        shootert.setPower((-1) * (pid + f * target) / presentVoltage);
-
-        try {
-            Thread.sleep(10);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        if (!gamepad1.a) {
+            shooterb.setPower((pid + f * target) / presentVoltage);
+            shootert.setPower((-1) * (pid + f * target) / presentVoltage);
+        } else {
+            shootert.setPower(0);
+            shooterb.setPower(0);
         }
 
 //        telemetry.addData("Turret angle: ", Math.toDegrees(turretAngle));
         telemetry.addData("Distance: ", distance);
         telemetry.addData("x: ", robotX);
         telemetry.addData("y: ", robotY);
+        telemetry.addData("Heading", Math.toDegrees(robotHeading));
         telemetry.addData("RPM: ", RPM.get(distance));
         telemetry.addData("Angle: ", angle.get(distance));
         telemetry.update();

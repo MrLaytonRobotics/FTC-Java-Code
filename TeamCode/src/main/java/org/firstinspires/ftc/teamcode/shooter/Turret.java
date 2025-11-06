@@ -20,7 +20,7 @@ import java.util.Base64;
 public class Turret extends OpMode {
     private PIDController controller;
 
-    public static double p = 0.025, i = 0, d = 0;
+    public static double p = 0.028, i = 0, d = 0;
     public static double target = 0;
 
     private final double ticks = 537.7 / 3;
