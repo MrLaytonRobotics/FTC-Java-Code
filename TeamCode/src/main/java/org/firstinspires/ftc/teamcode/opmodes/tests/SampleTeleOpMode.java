@@ -21,27 +21,29 @@ public class SampleTeleOpMode extends LinearOpMode {
     private Hardware hw;
     private ElapsedTime resetTimer;
 
-    private static final double PUSHER_UP = 0.2;
-    private static final double PUSHER_DOWN = 0;
-    private static final long PUSHER_TIME = 750;
-
-    // --- Button edge detection ---
+    // --- Button Variables ---
     private boolean previousAState = false;
     private boolean previousXState = false;
     private boolean previousYState = false;
 
-    // --- Toggles/states ---
+    // --- Intake/Outake Variables---
     private boolean isIntakeMotorOn = false;
     private boolean isOuttakeMotorOn = false;
 
-    // --- Pusher pulse state ---
+    // --- Pusher Variables ---
+    private static final double PUSHER_UP = 0.2;
+    private static final double PUSHER_DOWN = 0;
+    private static final long PUSHER_TIME = 750;
     private final ElapsedTime pusherTimer = new ElapsedTime();
 
     private boolean isPusherUp = false;
 
-    // --- sorter state ---
+    // --- Sorter Variables ---
     private final ElapsedTime sorterTimer = new ElapsedTime();
     int sorterpos = 0;
+    private static final double SORTER_FIRST_POS = 0.0;
+    private static final double SORTER_SECOND_POS = 0.42;
+    private static final double SORTER_THIRD_POS = 0.88;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -111,13 +113,13 @@ public class SampleTeleOpMode extends LinearOpMode {
             if (gamepad1.b && sorterTimer.milliseconds() > 500 && !isPusherUp){
                 sorterTimer.reset();
                 if (sorterpos == 0) {
-                    hw.sorter.setPosition(0);//60 degrees
+                    hw.sorter.setPosition(SORTER_FIRST_POS);//60 degrees
                 }
                 else if (sorterpos == 1) {
-                    hw.sorter.setPosition(0.42);//60 degrees
+                    hw.sorter.setPosition(SORTER_SECOND_POS);//60 degrees
                 }
                 else if (sorterpos == 2) {
-                    hw.sorter.setPosition(0.88);//60 degrees
+                    hw.sorter.setPosition(SORTER_THIRD_POS);//60 degrees
                 }
                 sorterpos = (sorterpos+1)%3;
             }
