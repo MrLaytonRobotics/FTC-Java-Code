@@ -16,9 +16,7 @@ import java.util.List;
 
 @TeleOp(name = "Red Teleop Android", group = "LionsSpark")
 public class RedTeleOpAndroid extends LinearOpMode {
-    private Robot robot;
 
-    // Declare motor and servo objects
     private DcMotor frontLeft = null;
     private DcMotor frontRight = null;
     private DcMotor backLeft = null;
@@ -29,15 +27,18 @@ public class RedTeleOpAndroid extends LinearOpMode {
     private Limelight3A limelight;
 
     private Servo servo;
-    private Servo alignCheckLight;
 
     // Setting our velocity targets. These values are in ticks per second!
     private static final double FULL_POWER = 1;
     private static final double bankVelocity = 1200;
     private static final int farVelocity = 1500;
     private static final int maxVelocity = 2000;
-
-    // Limelight and distance calculation variables
+    private static final int sqrtCoe = 1212;
+    private static final int squareCoe = 1250;
+    private static boolean ltPressedLast = false;
+    private static boolean servoToggled = false;
+    private static boolean rtPressedLast = false;
+    private static boolean intakeToggled = false;
     private static double targetOffsetAngle_Verticle;
     private static final double limelightMountAngleDegrees = 11;
     private static final double limelightLensHeightInches = 10.0;
@@ -47,30 +48,19 @@ public class RedTeleOpAndroid extends LinearOpMode {
     private static double distanceFromLimelightToGoalInches;
     private static double dist = 0;
     private static int learnedVelocity;
-    private static double speed = 1400; //RPM
+    private static double test = 1400; //RPM
     private static double Tx;
-
-    // State variables for toggles and modes
     private static boolean bPressedLast = false;
     private static boolean autoAim = false;
     private static boolean limelightIsValid = false;
-    private static boolean aligning = false;
 
-    // Enum for shooter state machine
     private enum ShootState {
         IDLE,
         PRELOAD,
         SHOOT
     }
-    // Enum for alignment state machine
-    private enum AlignState
-    {
-        STANDBY,
-        ALIGNING,
-        ALIGNED
-    }
+
     private ShootState shootState = ShootState.IDLE;
-    private AlignState alignState = AlignState.STANDBY;
     private ElapsedTime shootTimer = new ElapsedTime();
 
 
@@ -82,9 +72,6 @@ public class RedTeleOpAndroid extends LinearOpMode {
     private boolean right_bumperPressed = false;
     @Override
     public void runOpMode() {
-        robot = new Robot(hardwareMap);
-        robot.init();
-        // Declares objects
         frontLeft  = hardwareMap.get(DcMotor.class, "frontLeft");
         frontRight = hardwareMap.get(DcMotor.class, "frontRight");
         backLeft   = hardwareMap.get(DcMotor.class, "backLeft");
@@ -94,12 +81,6 @@ public class RedTeleOpAndroid extends LinearOpMode {
         intake = hardwareMap.get(DcMotor.class, "intake");
         limelight = hardwareMap.get(Limelight3A.class, "LimeLight");
         servo = hardwareMap.get(Servo.class, "servo");
-        alignCheckLight = hardwareMap.get(Servo.class, "alignCheckLight");
-
-        // Initialize toggle handlers
-        Toggle flywheelToggle = new Toggle(false);
-        Toggle limelightToggle = new Toggle(false);
-        ToggleManager toggleManager = new ToggleManager();
 
         // Establishing the direction and mode for the motors
         rightFlywheel.setDirection(DcMotor.Direction.REVERSE);
@@ -111,19 +92,14 @@ public class RedTeleOpAndroid extends LinearOpMode {
 
         //Ensures the servo is active and ready
         // --- MOTOR BEHAVIOR --- //
-        // Drivetrain and Climber set to BRAKE mode to prevent coasting
+        // Drivetrain and Climber set to BRAKE
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        // Flywheels set to FLOAT mode
         leftFlywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         rightFlywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        // Initialize servo and light positions
         servo.setPosition(.4);
-        alignCheckLight.setPosition(.288);
-        alignCheckLight.setPosition(.277);
-        // Set Limelight pipeline
         limelight.pipelineSwitch(0);
 
         //set encoders
@@ -140,7 +116,8 @@ public class RedTeleOpAndroid extends LinearOpMode {
         //defining auto aim switch
 
 
-
+        float calculatedShootingVelocity;
+        float areaForShooting;
         ElapsedTime shootTime = new ElapsedTime();
 
         /*
@@ -153,12 +130,7 @@ public class RedTeleOpAndroid extends LinearOpMode {
             {
                 // Calling our methods while the OpMode is running
                 autoAimToggle();
-                limelightToggle.update(gamepad1.b);
-                aligning = limelightToggle.getState();
-                isAlignedLight(limelightToggle.getState());
-
-                // Switch between manual and auto-aim driving
-                if(!limelightToggle.getState())
+                if(autoAim == false)
                 {
                     splitStickArcadeDrive();
                 }
@@ -166,12 +138,11 @@ public class RedTeleOpAndroid extends LinearOpMode {
                 {
                     autoAimArcadeDrive(Tx);
                 }
-                telemetry.addData("Light Status", alignCheckLight.getPosition());
+
 
 
                 //setFlywheelVelocity();
                 //manualCoreHexAndServoControl();
-                // Get and display Limelight status
                 LLStatus status = limelight.getStatus();
                 telemetry.addData("Name", "%s",status.getName());
                 telemetry.addData("LL", "Temp: %.1fC, CPU: %.1f%%, FPS: %d",status.getTemp(), status.getCpu(),(int)status.getFps());
@@ -182,12 +153,8 @@ public class RedTeleOpAndroid extends LinearOpMode {
                 //Toggle for the shooter
                 servoAndIntakeToggle();
                 shooterToggle();
-                flywheelToggle.update(gamepad1.right_bumper);
                 telemetry.addData("FlywheelStatus", flywheelOn);
-                telemetry.addData("FlywheelToggleStatus", flywheelToggle.getState());
-
-                // Control flywheel based on toggle state
-                if(flywheelToggle.getState())
+                if(flywheelOn)
                 {
                     shoot();
                 }
@@ -203,19 +170,14 @@ public class RedTeleOpAndroid extends LinearOpMode {
                 //Test for mapping power curve
                 if(gamepad1.dpadUpWasPressed())
                 {
-                    speed += 50;
+                    test += 50;
                 }
-                if(gamepad1.dpadDownWasPressed() && speed > 0)
+                if(gamepad1.dpadDownWasPressed() && test > 0)
                 {
-                    speed -= 50;
+                    test -= 50;
                 }
-                telemetry.addData("testSpeed", speed);
+                telemetry.addData("testSpeed", test);
                 LLResult result = limelight.getLatestResult();
-                if(!result.isValid())
-                {
-                    speed = 1400;
-                }
-                // Process Limelight results if valid
                 if (result.isValid())
                 {
                     limelightIsValid = true;
@@ -224,17 +186,13 @@ public class RedTeleOpAndroid extends LinearOpMode {
                     double captureLatency = result.getCaptureLatency();
                     double targetingLatency = result.getTargetingLatency();
                     double parseLatency = result.getParseLatency();
-
-                    // Calculate distance to goal
                     targetOffsetAngle_Verticle = (result.getTy());
                     angleToGoalDegrees = limelightMountAngleDegrees + targetOffsetAngle_Verticle;
                     angleToGoalRadians = angleToGoalDegrees * (Math.PI/180.0);
                     distanceFromLimelightToGoalInches = (goalHeightInches - limelightLensHeightInches) / Math.tan(angleToGoalRadians);
-                    //attempt one for velocity calculation
+                    //attempt one
                     dist = (1.0/Math.sqrt(result.getTa()));
                     learnedVelocity = (int)(dist * 1188);
-
-                    // Display Limelight data in telemetry
                     telemetry.addData("Distance", 1/dist);
                     telemetry.addData("LL Latency", captureLatency + targetingLatency);
                     telemetry.addData("Parse Latency", parseLatency);
@@ -248,10 +206,8 @@ public class RedTeleOpAndroid extends LinearOpMode {
                     telemetry.addData("angleToGoalDegrees", angleToGoalDegrees);
                     telemetry.addData("angleToGoalRadians", angleToGoalRadians);
                     telemetry.addData("distanceFromLimelightToGoalInches", distanceFromLimelightToGoalInches);
-                    telemetry.addData("testSpeed", speed);
+                    telemetry.addData("testSpeed", test);
                     Tx = result.getTx();
-                    // Calculate flywheel speed based on distance
-                    speed = .2214*Math.pow(distanceFromLimelightToGoalInches,2) - 12.7553*distanceFromLimelightToGoalInches + 1216.8651;
                     telemetry.addData("Botpose", botpose.toString());
 
                     // Access barcode results
@@ -297,7 +253,6 @@ public class RedTeleOpAndroid extends LinearOpMode {
                 }
 
 
-                // Display flywheel and velocity data
                 telemetry.addData("Learned Velocity", learnedVelocity);
                 telemetry.addData("Left Flywheel Velocity", ((DcMotorEx) leftFlywheel).getVelocity());
                 telemetry.addData("Right Flywheel Velocity", ((DcMotorEx) rightFlywheel).getVelocity());
@@ -333,10 +288,6 @@ public class RedTeleOpAndroid extends LinearOpMode {
 
     }
 
-    /**
-     * Controls the drivetrain with auto-aim functionality.
-     * @param Tx The horizontal offset from the Limelight target.
-     */
     private void autoAimArcadeDrive(double Tx) {
         double y;
         //----------------//
@@ -408,7 +359,7 @@ public class RedTeleOpAndroid extends LinearOpMode {
                 // Run intake backwards briefly to "pull back" the ring
                 intake.setPower(-1);
 
-                // After 0.15 seconds, go to shooting phase
+                // After 0.25 seconds, go to shooting phase
                 if (shootTimer.seconds() > 0.15) {
                     shootState = ShootState.SHOOT;
                     servo.setPosition(0); // Fire
@@ -429,9 +380,6 @@ public class RedTeleOpAndroid extends LinearOpMode {
         }
     }
 
-    /**
-     * Toggles the auto-aim feature.
-     */
     private void autoAimToggle() {
         boolean bPressedNow = gamepad1.b;
         if(bPressedNow && !bPressedLast)
@@ -442,9 +390,7 @@ public class RedTeleOpAndroid extends LinearOpMode {
         bPressedLast = bPressedNow;
     }
 
-    /**
-     * Toggles the shooter flywheel on and off.
-     */
+    //Toggle for the shooter
     private void shooterToggle() {
         if (gamepad1.right_bumper && !right_bumperPressed)
         {
@@ -464,22 +410,19 @@ public class RedTeleOpAndroid extends LinearOpMode {
 
 
     /**
-     * Ramps up the flywheel to the target speed.
+     * The bank shot or near velocity is intended for launching balls touching or a few inches from the goal.
+     * When running this function, the flywheel will spin up and the Core Hex will wait before balls can be fed.
+     * The servo will spin until the bumper is released.
      */
     private void shoot()
     {
         double currentVelocity = leftFlywheel.getVelocity();
-        if(currentVelocity < speed)
+        if(currentVelocity < test)
         {
             leftFlywheel.setPower(FULL_POWER);
             rightFlywheel.setPower(FULL_POWER);
 
 
-        }
-        else if(currentVelocity >= (speed -100) || currentVelocity >= (speed + 100))
-        {
-            leftFlywheel.setVelocity(speed);
-            rightFlywheel.setVelocity(speed);
         }
         else
         {
@@ -496,51 +439,16 @@ public class RedTeleOpAndroid extends LinearOpMode {
      * The servo will spin until the bumper is released.
      */
 
-    /**
-     * Stops the flywheels.
-     */
     private void stopFlywheels() {
         ((DcMotorEx) leftFlywheel).setVelocity(0);
         ((DcMotorEx) rightFlywheel).setVelocity(0);
 
     }
 
-    /**
-     * Controls the alignment indicator light based on the alignment status.
-     * @param toggled Whether the alignment mode is toggled on.
-     */
-    private void isAlignedLight(boolean toggled)
-    {
-        switch(alignState) {
-            case STANDBY:
-                alignCheckLight.setPosition(.288);
-                if (toggled) {
-                    alignState = AlignState.ALIGNING;
-                }
-                break;
-            case ALIGNING:
-                alignCheckLight.setPosition(.333);
-                if ((Math.abs(Tx) < 3) && (speed >= leftFlywheel.getVelocity() - 100 && speed <= leftFlywheel.getVelocity() + 100)) {
-                    alignState = AlignState.ALIGNED;
-                }
-                if (!toggled)
-                {
-                    alignState = AlignState.STANDBY;
-                }
-                break;
-
-            case ALIGNED:
-                alignCheckLight.setPosition(.5);
-                if(!((Math.abs(Tx) < 3) && (speed >= leftFlywheel.getVelocity() - 100 && speed <= leftFlywheel.getVelocity() + 100)))
-                {
-                    alignState = AlignState.ALIGNING;
-                }
-                if (!toggled)
-                {
-                    alignState = AlignState.STANDBY;
-                }
-                break;
-        }
-    }
-
 }
+
+
+
+
+
+
