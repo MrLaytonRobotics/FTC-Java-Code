@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @Autonomous
-public abstract class AutoBase extends LinearOpMode {
+public class AutoBase extends LinearOpMode {
 
     DcMotor fl, fr, bl, br;
     DcMotor launcher;
