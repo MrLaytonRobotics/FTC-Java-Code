@@ -48,7 +48,7 @@ public class Auto_InAndOuttake_Hinaa extends LinearOpMode {
             // Step 3: Run outtake to shoot pixel
             outtakeleft.setPower(1.0);
             outtakeright.setPower(1.0);
-            telemetry.addLine("Shooting pixel...");
+            telemetry.addLine("Shooting artifact...");
             telemetry.update();
             sleep(3000);  // spin shooters for 3 seconds
 
@@ -56,7 +56,7 @@ public class Auto_InAndOuttake_Hinaa extends LinearOpMode {
             intake.setPower(0);
             outtakeleft.setPower(0);
             outtakeright.setPower(0);
-            telemetry.addLine("Done!");
+            telemetry.addLine("Done");
             telemetry.update();
         }
     }

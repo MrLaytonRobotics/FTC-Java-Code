@@ -1,7 +1,7 @@
 
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+//import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -38,7 +38,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+//import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -68,7 +68,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
 */
-@Disabled
+//@Disabled
 @Autonomous(name="AutoMode_Hinaa", group="Robot")
 //@Disabled
 public class AutoMode_Hinaa extends LinearOpMode {
@@ -79,6 +79,9 @@ public class AutoMode_Hinaa extends LinearOpMode {
     private DcMotor backleft  = null;
     private DcMotor backright  = null;
 
+    private DcMotor intake;
+    private DcMotor outtakeleft;
+    private DcMotor outtakeright;
     private ElapsedTime runtime = new ElapsedTime();
 
     // Calculate the COUNTS_PER_INCH for your specific drive train.
@@ -94,6 +97,8 @@ public class AutoMode_Hinaa extends LinearOpMode {
             (WHEEL_DIAMETER_INCHES * 3.1415);
     static final double     DRIVE_SPEED             = 0.6;
     static final double     TURN_SPEED              = 0.5;
+    static final double STRAFE_CORRECTION = 1.2;        // Adjust to fine-tune strafe distance
+
 
     @Override
     public void runOpMode() {
@@ -103,6 +108,11 @@ public class AutoMode_Hinaa extends LinearOpMode {
         frontright = hardwareMap.get(DcMotor.class, "frontright");
         backleft = hardwareMap.get(DcMotor.class, "backleft");
         backright = hardwareMap.get(DcMotor.class, "backright");
+        // Map hardware
+        intake = hardwareMap.get(DcMotor.class, "intake");
+        outtakeleft = hardwareMap.get(DcMotor.class, "outtakeleft");
+        outtakeright = hardwareMap.get(DcMotor.class, "outtakeright");
+
 
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
@@ -112,6 +122,14 @@ public class AutoMode_Hinaa extends LinearOpMode {
         backleft.setDirection(DcMotor.Direction.REVERSE);
         frontright.setDirection(DcMotor.Direction.FORWARD);
         backright.setDirection(DcMotor.Direction.FORWARD);
+        // Make the two outtakes spin opposite ways
+        outtakeleft.setDirection(DcMotor.Direction.FORWARD);
+        outtakeright.setDirection(DcMotor.Direction.REVERSE);
+
+        // Set all powers to zero initially
+        intake.setPower(0);
+        outtakeleft.setPower(0);
+        outtakeright.setPower(0);
 
 
         frontleft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -130,6 +148,7 @@ public class AutoMode_Hinaa extends LinearOpMode {
                 frontright.getCurrentPosition(),
                 backleft.getCurrentPosition(),
                 backright.getCurrentPosition());
+        telemetry.addLine("Initialized — waiting for start");
         telemetry.update();
 
         // Wait for the game to start (driver presses START)
@@ -137,9 +156,26 @@ public class AutoMode_Hinaa extends LinearOpMode {
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
-        encoderDrive(DRIVE_SPEED,  3,  3, 5.0);  // S1: Forward 47 Inches with 5 Sec timeout
-        encoderDrive(TURN_SPEED,   3, -3, 4.0);  // S2: Turn Right 12 Inches with 4 Sec timeout
-        encoderDrive(DRIVE_SPEED, -3, -3, 4.0);  // S3: Reverse 24 Inches with 4 Sec timeout
+        encoderDrive(DRIVE_SPEED,  35,  35, 3.0);  // S1: Forward 47 Inches with 5 Sec timeout
+        encoderDrive(TURN_SPEED,   16, -16, 2.0);  // S2: Turn Right 12 Inches with 4 Sec timeout
+        //encoderDrive(DRIVE_SPEED, -12, -12, 2.0);  // S3: Reverse 24 Inches with 4 Sec timeout
+        encoderDrive(DRIVE_SPEED,  32,  32, 3.0);
+
+        intake.setPower(1.0);
+        telemetry.addLine("Running intake...");
+        telemetry.update();
+        sleep(2000);
+
+        // Step 2: Stop intake
+        intake.setPower(0);
+        sleep(500);
+
+        encoderDrive(DRIVE_SPEED,  35,  35, 3.0);
+        strafeDrive(DRIVE_SPEED, 12, 3.0);   // Strafe right 12 inches
+        strafeDrive(DRIVE_SPEED, -12, 2.0);  // Strafe left 12 inches
+
+
+
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -196,8 +232,8 @@ public class AutoMode_Hinaa extends LinearOpMode {
             // onto the next step, use (isBusy() || isBusy()) in the loop test.
             while (opModeIsActive() &&
                     (runtime.seconds() < timeoutS) &&
-                    (frontleft.isBusy() && frontright.isBusy() &&
-                            backleft.isBusy() && backright.isBusy())) {
+                    (frontleft.isBusy()|| frontright.isBusy()||
+                            backleft.isBusy() || backright.isBusy())) {
 
 
                 // Display it for the driver.
@@ -221,5 +257,55 @@ public class AutoMode_Hinaa extends LinearOpMode {
 
             sleep(250);   // optional pause after each move.
         }
+
     }
+    public void strafeDrive(double speed, double inches, double timeoutS) {
+        int flTarget, frTarget, blTarget, brTarget;
+
+        if (opModeIsActive()) {
+            int moveCounts = (int)(inches * COUNTS_PER_INCH * STRAFE_CORRECTION);
+
+            flTarget = frontleft.getCurrentPosition() + moveCounts;
+            frTarget = frontright.getCurrentPosition() - moveCounts;
+            blTarget = backleft.getCurrentPosition() - moveCounts;
+            brTarget = backright.getCurrentPosition() + moveCounts;
+
+            frontleft.setTargetPosition(flTarget);
+            frontright.setTargetPosition(frTarget);
+            backleft.setTargetPosition(blTarget);
+            backright.setTargetPosition(brTarget);
+
+            frontleft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            frontright.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            backleft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            backright.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            runtime.reset();
+            frontleft.setPower(Math.abs(speed));
+            frontright.setPower(Math.abs(speed));
+            backleft.setPower(Math.abs(speed));
+            backright.setPower(Math.abs(speed));
+
+            while (opModeIsActive() &&
+                    (runtime.seconds() < timeoutS) &&
+                    (frontleft.isBusy() || frontright.isBusy() || backleft.isBusy() || backright.isBusy())) {
+
+                telemetry.addData("Strafing to", "FL:%d FR:%d", flTarget, frTarget);
+                telemetry.update();
+            }
+
+            frontleft.setPower(0);
+            frontright.setPower(0);
+            backleft.setPower(0);
+            backright.setPower(0);
+
+            frontleft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            frontright.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            backleft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            backright.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            sleep(250);
+        }
+    }
+
 }
+

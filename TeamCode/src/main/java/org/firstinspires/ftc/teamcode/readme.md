@@ -148,4 +148,4 @@ Note: Some names start with "Team" and others start with "team".  This is intent
 For ex (on a mac) - `adb push /Users/prahar/StudioProjects/FtcRobotController/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/ /sdcard/FIRST/java/src/org/firstinspires/ftc/teamcode/`
 
 NOTE: Do not change the destination path as it won't change for windows/mac.
-In our case the destination path is `/sdcard/FIRST/java/src/org/firstinspires/ftc/teamcode/`
+In our case the destination path is adb push  C:\Users\spati\StudioProjects\FtcRobotController\TeamCode\src\main\java\org\firstinspires\ftc\teamcode\ /sdcard/FIRST/java/src/org/firstinspires/ftc/teamcode/

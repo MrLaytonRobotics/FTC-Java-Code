@@ -81,6 +81,10 @@ public class TeleOpMode_Hinaa extends LinearOpMode {
         outtakeleft.setDirection(DcMotor.Direction.FORWARD);
         outtakeright.setDirection(DcMotor.Direction.REVERSE);
 
+
+
+
+
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
         // ########################################################################################
@@ -96,9 +100,15 @@ public class TeleOpMode_Hinaa extends LinearOpMode {
         frontright.setDirection(DcMotor.Direction.FORWARD);
         backright.setDirection(DcMotor.Direction.FORWARD);
 
+        // Stop motors initially
+        intake.setPower(0);
+        outtakeleft.setPower(0);
+        outtakeright.setPower(0);
+
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+
 
         waitForStart();
         runtime.reset();
@@ -149,6 +159,21 @@ public class TeleOpMode_Hinaa extends LinearOpMode {
             backRightPower  = gamepad1.b ? 1.0 : 0.0;  // B gamepad
             */
 
+            // Intake control — use right trigger for intake in, left trigger for reverse
+            double intakePower = gamepad2.right_trigger - gamepad2.left_trigger;
+            intake.setPower(intakePower);
+
+            // Outtake control — press 'A' to run both outtakes, 'B' to reverse
+            double outtakePower = 0;
+            if (gamepad2.a) {
+                outtakePower = .75; // full forward
+            } else if (gamepad2.b) {
+                outtakePower = -.75; // reverse
+            }
+
+            outtakeleft.setPower(outtakePower);
+            outtakeright.setPower(outtakePower);
+
             // Send calculated power to wheels
             frontleft.setPower(frontleftPower);
             frontright.setPower(frontrightPower);
@@ -159,6 +184,8 @@ public class TeleOpMode_Hinaa extends LinearOpMode {
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", frontleftPower, frontrightPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", backleftPower, backrightPower);
+            telemetry.addData("Intake Power", intakePower);
+            telemetry.addData("Outtake Power", outtakePower);
             telemetry.update();
         }
     }}
