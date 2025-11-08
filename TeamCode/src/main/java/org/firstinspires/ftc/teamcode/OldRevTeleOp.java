@@ -19,7 +19,7 @@ public class OldRevTeleOp extends OpMode {
         leftFront = hardwareMap.get(DcMotor.class, "leftFront");
         leftRear = hardwareMap.get(DcMotor.class, "leftRear");
 
-        //change this when working!!!!!
+    //change this when working!!!!!
         rightFront.setDirection(DcMotor.Direction.FORWARD);
         rightRear.setDirection(DcMotor.Direction.FORWARD);
         leftFront.setDirection(DcMotor.Direction.FORWARD);
@@ -46,23 +46,10 @@ public class OldRevTeleOp extends OpMode {
 
     }
     public void Movement() {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-        float gamePadX = gamepad1.left_stick_y;
-        float gamePadY = -gamepad1.right_stick_x;
-=======
         float gamePadY = -gamepad1.left_stick_y;
         float gamePadX = gamepad1.right_stick_x;
->>>>>>> parent of 4045e93 (Update OldRevTeleOp.java)
-=======
-        float gamePadY = -gamepad1.left_stick_y;
-        float gamePadX = gamepad1.right_stick_x;
->>>>>>> parent of 4045e93 (Update OldRevTeleOp.java)
-=======
-        float gamePadY = -gamepad1.left_stick_y;
-        float gamePadX = gamepad1.right_stick_x;
->>>>>>> parent of 4045e93 (Update OldRevTeleOp.java)
+        float gamePadX = -gamepad1.left_stick_y;
+        float gamePadY = gamepad1.right_stick_x;
 
         //Range.clip clamps the value
         rightFront.setPower(Range.clip(gamePadY - gamePadX, -1, 1));
