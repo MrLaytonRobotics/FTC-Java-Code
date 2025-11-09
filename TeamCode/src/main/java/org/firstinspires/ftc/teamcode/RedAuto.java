@@ -16,7 +16,7 @@ public class RedAuto extends LinearOpMode {
         rightDrive = hardwareMap.get(DcMotor.class, "rightDrive");
 
         long sleepingTime1 = 1000;
-        long sleepingTime2 = 1000;        
+        long sleepingTime2 = 1000;
 
         rightDrive.setDirection(DcMotorSimple.Direction.REVERSE);
         waitForStart();
