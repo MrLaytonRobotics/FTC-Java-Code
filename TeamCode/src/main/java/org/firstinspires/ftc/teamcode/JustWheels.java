@@ -16,7 +16,7 @@ public class JustWheels extends OpMode {
         float x;
         float y;
         x = gamepad1.right_stick_x;
-        y = -gamepad1.left_stick_y;
+        y = -gamepad1.right_stick_y;
 
         //Values of gamepad
         telemetry.addData("X Value of the GamePad", x);
