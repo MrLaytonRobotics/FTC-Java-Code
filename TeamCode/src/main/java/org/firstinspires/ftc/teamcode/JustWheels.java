@@ -27,6 +27,5 @@ public class JustWheels extends OpMode {
         //Set the power
         leftDrive.setPower(y - x);
         rightDrive.setPower(y + x);
-
     }
 }
