@@ -15,26 +15,34 @@ public class JustWheels extends OpMode {
     public void loop() {
         float x;
         float y;
-        boolean IsOn;
+        boolean isOn;
         x = gamepad1.right_stick_x;
         y = -gamepad1.right_stick_y;
-        IsOn = gamepad1.a;
+        isOn = gamepad1.a;
+
 
         //Values of gamepad
         telemetry.addData("X Value of the GamePad", x);
         telemetry.addData("Y Value of the GamePad", y);
-        if(IsOn) {
+
+        if(isOn) {
             //Drive Power
             telemetry.addData("LeftDrive Power", y - x);
             telemetry.addData("RightDrive Power", y + x);
-            telemetry.addData("Is on", IsOn);
+            telemetry.addData("Is on", isOn);
             //Set the power
             leftDrive.setPower(y - x);
             rightDrive.setPower(y + x);
         }else{
-            telemetry.addData("Is on", IsOn);
+            telemetry.addData("Is on", isOn);
             telemetry.addData("LeftDrive Power", 0);
             telemetry.addData("RightDrive Power", 0);
+            //Set the power
+            leftDrive.setPower(0);
+            rightDrive.setPower(0);
         }
+
+        telemetry.update();
+
     }
 }
