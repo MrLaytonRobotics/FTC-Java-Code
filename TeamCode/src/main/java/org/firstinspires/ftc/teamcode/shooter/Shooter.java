@@ -63,7 +63,7 @@ public class Shooter extends OpMode {
         //hood.setPosition(0);
         controller.setPID(p, i, d);
         double presentVoltage = volt.getVoltage();
-        vel = vel * alpha + shooterb.getVelocity() * (2 * Math.PI / 28) * (1 - alpha);
+        vel = shooterb.getVelocity() * (2 * Math.PI / 28);
         double pid = controller.calculate(vel, target);
         pid = Math.max(-presentVoltage, Math.min(pid, presentVoltage));
         shooterb.setPower((pid + f * target) / presentVoltage);

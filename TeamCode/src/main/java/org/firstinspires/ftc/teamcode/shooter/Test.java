@@ -172,7 +172,7 @@ public class Test extends OpMode {
         }
         controller.setPID(p, i, d);
         double presentVoltage = volt.getVoltage();
-        vel = vel * alpha + shooterb.getVelocity() * (2 * Math.PI / 28) * (1 - alpha);
+        vel = shooterb.getVelocity() * (2 * Math.PI / 28);
         double pid = controller.calculate(vel, target);
         pid = Math.max(-presentVoltage, Math.min(pid, presentVoltage));
         if (!gamepad1.a || robotX >= 40) {
