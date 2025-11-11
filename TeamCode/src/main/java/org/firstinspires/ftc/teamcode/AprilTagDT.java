@@ -29,18 +29,24 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 import java.util.List;
 
 /*
@@ -52,12 +58,14 @@ import java.util.List;
  * 3) Yaw:      Rotating Clockwise and counter clockwise    Right-joystick Right and Left
  */
 
-@TeleOp(name="AprilTagDT", group="Linear OpMode")
+@TeleOp(name="AprilTagDT2", group="Linear OpMode")
 
 public class AprilTagDT extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 motors.
     private ElapsedTime runtime = new ElapsedTime();
+    private ElapsedTime launchTimer = new ElapsedTime();
+    private ElapsedTime intakeJitterTimer = new ElapsedTime();
     private static final boolean USE_WEBCAM = true;
     private VisionPortal visionPortal;
     private AprilTagProcessor aprilTag;
@@ -66,6 +74,52 @@ public class AprilTagDT extends LinearOpMode {
     private DcMotor frontRightDrive = null;
     private DcMotor backRightDrive = null;
     private DcMotor intakeMotor = null;
+    private DcMotor launchMotor = null;
+    private Servo Trigger = null;
+    private Servo Roller1 = null;
+    private Servo Roller2 = null;
+    GoBildaPinpointDriver pinpoint;
+
+    // Launch sequence states
+    private enum LaunchState {
+        IDLE,
+        SPINNING_UP,
+        FIRING,
+        RESETTING
+    }
+    private LaunchState launchState = LaunchState.IDLE;
+
+    // Intake jitter states
+    private enum IntakeJitterState {
+        IDLE,
+        REVERSE,
+        FORWARD
+    }
+    private IntakeJitterState intakeJitterState = IntakeJitterState.IDLE;
+
+    // Servo positions - adjust these based on your robot
+    private final double TRIGGER_START_POS = 0;
+    private final double TRIGGER_FIRE_POS = 300;  // Adjust as needed
+    private final double ROLLER_STOP = 300;  // For continuous rotation servos
+    private final double ROLLER_FORWARD = 0;  // Adjust speed as needed (0.5-1.0)
+
+    // Timing constants (in seconds)
+    private final double SPINUP_TIME_SHORT =1.0;  // Left trigger - quick shot
+    private final double SPINUP_TIME_LONG =1.9;   // Right trigger - power shot
+    private final double FIRE_TIME = 0.3;          // Time trigger is in fire position
+    private final double RESET_TIME = 0.3;         // Time for trigger to reset
+    private double currentSpinupTime = SPINUP_TIME_SHORT; // Track which shot type we're using
+
+    // Intake jitter timing
+    private final double JITTER_REVERSE_TIME = 0.05;
+    private final double JITTER_FORWARD_TIME = 0.10;
+
+    // AprilTag lock-on constants
+    private final double TAG_LOCK_KP = 0.02;        // Proportional gain for rotation
+    private final double TAG_LOCK_TOLERANCE = 2.0;  // Degrees - how close is "locked on"
+    private final double TAG_LOCK_MIN_POWER = 0.05; // Minimum rotation power
+    private final double TAG_LOCK_MAX_POWER = 0.4;  // Maximum rotation power
+
     private double tagX = 0.0;
     private double tagY = 0.0;
     private double tagZ = 0.0;
@@ -80,6 +134,7 @@ public class AprilTagDT extends LinearOpMode {
 
     private int tagId = -1;        // ID of the tag being tracked
     private boolean tagVisible = false; // true if a tag was seen this frame
+    private boolean isLockedOn = false; // true if aligned within tolerance
 
     @Override
     public void runOpMode() {
@@ -92,27 +147,37 @@ public class AprilTagDT extends LinearOpMode {
         frontRightDrive = hardwareMap.get(DcMotor.class, "front_right_drive");
         backRightDrive = hardwareMap.get(DcMotor.class, "back_right_drive");
         intakeMotor = hardwareMap.get(DcMotor.class, "intake_motor");
+        launchMotor = hardwareMap.get(DcMotor.class, "launch_motor");
+        Trigger = hardwareMap.get(Servo.class, "Trigger");
+        Roller1 = hardwareMap.get(Servo.class, "Roller1");
+        Roller2 = hardwareMap.get(Servo.class, "Roller2");
+        //pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
         // ########################################################################################
-        // Most robots need the motors on one side to be reversed to drive forward.
-        // The motor reversals shown here are for a "direct drive" robot (the wheels turn the same direction as the motor shaft)
-        // If your robot has additional gear reductions or uses a right-angled drive, it's important to ensure
-        // that your motors are turning in the correct direction.  So, start out with the reversals here, BUT
-        // when you first test your robot, push the left joystick forward and observe the direction the wheels turn.
-        // Reverse the direction (flip FORWARD <-> REVERSE ) of any wheel that runs backward
-        // Keep testing until ALL the wheels move the robot forward when you push the left joystick forward.
-        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
         backRightDrive.setDirection(DcMotor.Direction.REVERSE);
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        launchMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        Trigger.setDirection(Servo.Direction.FORWARD);
+        Roller1.setDirection(Servo.Direction.FORWARD);
+        Roller2.setDirection(Servo.Direction.REVERSE);  // Reverse one so both spin same direction
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
-        // Wait for the DS start button to be touched.
         telemetry.addData("DS preview on/off", "3 dots, Camera Stream");
+        telemetry.addData("Controls", "Left Trigger = AprilTag Lock-On");
+        telemetry.update();
+
+        // Set initial positions
+        Trigger.setPosition(TRIGGER_START_POS);
+        Roller1.setPosition(ROLLER_STOP);
+        Roller2.setPosition(ROLLER_STOP);
+
+        telemetry.addData("Servo", "Starting at 15°");
         telemetry.update();
         waitForStart();
         runtime.reset();
@@ -123,31 +188,60 @@ public class AprilTagDT extends LinearOpMode {
             telemetryAprilTag();
             double max;
 
+            // ===== GAMEPAD 1 (DRIVER) CONTROLS =====
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
-            double axial   = -gamepad1.left_stick_y;;  // Note: pushing stick forward gives negative value
+            double axial   = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
             double lateral =  gamepad1.left_stick_x;
             double yaw;
-            if (gamepad1.left_trigger > 0.5 && tagVisible) {
-                // Basic proportional control: try to turn until tagYaw ≈ 0
-                double tC = 0.02;
-                yaw = -tagYaw * tC;
-                telemetry.addLine("Tag Lock Active");
-            }
-            else {
+
+            // ===== APRILTAG LOCK-ON FEATURE =====
+            // Left trigger activates AprilTag lock-on mode
+            if (gamepad1.left_trigger > 0.1 && tagVisible) {
+                // Use proportional control to align to the tag
+                // tagBearing tells us the horizontal angle to the tag
+                // Negative bearing = tag is to the left, positive = tag is to the right
+
+                double error = -tagBearing;  // Error in degrees
+
+                // Check if we're locked on (within tolerance)
+                if (Math.abs(error) < TAG_LOCK_TOLERANCE) {
+                    isLockedOn = true;
+                    yaw = 0.0;  // No rotation needed, we're aligned!
+                } else {
+                    isLockedOn = false;
+                    // Calculate proportional control
+                    yaw = error * TAG_LOCK_KP;
+
+                    // Apply minimum power to overcome friction
+                    if (Math.abs(yaw) > 0 && Math.abs(yaw) < TAG_LOCK_MIN_POWER) {
+                        yaw = Math.copySign(TAG_LOCK_MIN_POWER, yaw);
+                    }
+
+                    // Clamp to max power
+                    yaw = Range.clip(yaw, -TAG_LOCK_MAX_POWER, TAG_LOCK_MAX_POWER);
+                }
+
+                telemetry.addData("🎯 TAG LOCK", "ACTIVE");
+                telemetry.addData("Bearing Error", "%.1f°", error);
+                telemetry.addData("Lock Status", isLockedOn ? "🟢 LOCKED ON" : "🟡 ALIGNING...");
+                telemetry.addData("Rotation Power", "%.2f", yaw);
+            } else {
                 // Normal manual control
-                yaw = gamepad1.right_stick_x;
+                yaw = -gamepad1.right_stick_x;
+                isLockedOn = false;
+
+                if (gamepad1.left_trigger > 0.1 && !tagVisible) {
+                    telemetry.addData("🎯 TAG LOCK", "⚠️ NO TAG VISIBLE");
+                }
             }
+
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
-            // Set up a variable for each drive wheel to save the power level for telemetry.
-            double frontLeftPower  = axial + lateral + yaw;
-            double frontRightPower = axial - lateral - yaw;
-            double backLeftPower   = axial - lateral + yaw;
-            double backRightPower  = axial + lateral - yaw;
-
-
+            double frontLeftPower  = (axial + lateral + yaw) * 1.25;
+            double frontRightPower = (axial - lateral - yaw) * 0.75;
+            double backLeftPower   = (axial - lateral + yaw) * 1.25;
+            double backRightPower  = (axial + lateral - yaw) * 0.75;
 
             // Normalize the values so no wheel power exceeds 100%
-            // This ensures that the robot maintains the desired motion.
             max = Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower));
             max = Math.max(max, Math.abs(backLeftPower));
             max = Math.max(max, Math.abs(backRightPower));
@@ -159,44 +253,151 @@ public class AprilTagDT extends LinearOpMode {
                 backRightPower  /= max;
             }
 
-            // This is test code:
-            //
-            // Uncomment the following code to test your motor directions.
-            // Each button should make the corresponding motor run FORWARD.
-            //   1) First get all the motors to take to correct positions on the robot
-            //      by adjusting your Robot Configuration if necessary.
-            //   2) Then make sure they run in the correct direction by modifying the
-            //      the setDirection() calls above.
-            // Once the correct motors move in the correct direction re-comment this code.
-
-            /*
-            frontLeftPower  = gamepad1.x ? 1.0 : 0.0;  // X gamepad
-            backLeftPower   = gamepad1.a ? 1.0 : 0.0;  // A gamepad
-            frontRightPower = gamepad1.y ? 1.0 : 0.0;  // Y gamepad
-            backRightPower  = gamepad1.b ? 1.0 : 0.0;  // B gamepad
-            */
-
-            // Send calculated power to wheels
-            if (gamepad1.right_trigger > 0.2){
-                intakeMotor.setPower(gamepad1.right_trigger);
-            }
-            else{
-                intakeMotor.setPower(0);
-            }
+            // Send calculated power to wheels - ALWAYS UPDATE, NEVER BLOCK
             frontLeftDrive.setPower(frontLeftPower);
             frontRightDrive.setPower(frontRightPower);
             backLeftDrive.setPower(backLeftPower);
             backRightDrive.setPower(backRightPower);
 
+            // Y button: Manual roller control for testing
+            if (gamepad1.y) {
+                Roller1.setPosition(ROLLER_FORWARD);
+                Roller2.setPosition(ROLLER_FORWARD);
+            }
 
+            // ===== GAMEPAD 2 (OPERATOR) CONTROLS =====
+
+            // ===== INTAKE CONTROL =====
+            // Handle intake jitter state machine first (X button)
+            switch (intakeJitterState) {
+                case IDLE:
+                    if (gamepad2.x) {
+                        intakeJitterState = IntakeJitterState.REVERSE;
+                        intakeJitterTimer.reset();
+                    }
+                    break;
+
+                case REVERSE:
+                    if (intakeJitterTimer.seconds() >= JITTER_REVERSE_TIME) {
+                        intakeJitterState = IntakeJitterState.FORWARD;
+                        intakeJitterTimer.reset();
+                    }
+                    break;
+
+                case FORWARD:
+                    if (intakeJitterTimer.seconds() >= JITTER_FORWARD_TIME) {
+                        intakeJitterState = IntakeJitterState.IDLE;
+                    }
+                    break;
+            }
+
+            // Now handle all intake controls based on button priority
+            if (intakeJitterState == IntakeJitterState.REVERSE) {
+                // Jitter mode - reverse phase
+                intakeMotor.setPower(-1.0);
+                Roller1.setPosition(ROLLER_STOP);
+                Roller2.setPosition(ROLLER_STOP);
+            } else if (intakeJitterState == IntakeJitterState.FORWARD) {
+                // Jitter mode - forward phase
+                intakeMotor.setPower(1.0);
+                Roller1.setPosition(ROLLER_STOP);
+                Roller2.setPosition(ROLLER_STOP);
+            } else if (gamepad2.a) {
+                // A button: Run intake forward with rollers
+                intakeMotor.setPower(1.0);
+                Roller1.setPosition(ROLLER_FORWARD);
+                Roller2.setPosition(ROLLER_FORWARD);
+            } else if (gamepad1.y) {
+                // Y button: Reverse intake (no rollers)
+                intakeMotor.setPower(-1.0);
+                Roller1.setPosition(ROLLER_STOP);
+                Roller2.setPosition(ROLLER_STOP);
+            } else if (gamepad2.b) {
+                // B button: Slow intake
+                intakeMotor.setPower(0.5);
+                Roller1.setPosition(ROLLER_STOP);
+                Roller2.setPosition(ROLLER_STOP);
+            } else {
+                // No buttons pressed: Stop everything
+                intakeMotor.setPower(0.0);
+                Roller1.setPosition(ROLLER_STOP);
+                Roller2.setPosition(ROLLER_STOP);
+            }
+
+            // ===== LAUNCH SEQUENCE CONTROL =====
+            // State machine for launch sequence
+            switch (launchState) {
+                case IDLE:
+                    // Left trigger = quick shot (1.0s spinup)
+                    if (gamepad2.left_trigger > 0.1) {
+                        launchState = LaunchState.SPINNING_UP;
+                        launchTimer.reset();
+                        launchMotor.setPower(1.0);
+                        currentSpinupTime = SPINUP_TIME_SHORT;
+                        telemetry.addData("🚀 Launch", "Quick Shot - Spinning up...");
+                    }
+                    // Right trigger = power shot (2.2s spinup)
+                    else if (gamepad2.right_trigger > 0.1) {
+                        launchState = LaunchState.SPINNING_UP;
+                        launchTimer.reset();
+                        launchMotor.setPower(1.0);
+                        currentSpinupTime = SPINUP_TIME_LONG;
+                        telemetry.addData("🚀 Launch", "Power Shot - Spinning up...");
+                    }
+                    break;
+
+                case SPINNING_UP:
+                    // Wait for motor to spin up (uses currentSpinupTime)
+                    if (launchTimer.seconds() >= currentSpinupTime) {
+                        launchState = LaunchState.FIRING;
+                        launchTimer.reset();
+                        Trigger.setPosition(TRIGGER_FIRE_POS);
+                        telemetry.addData("🚀 Launch", "FIRING!");
+                    } else {
+                        telemetry.addData("🚀 Launch", "Spinning... %.1fs", launchTimer.seconds());
+                    }
+                    break;
+
+                case FIRING:
+                    // Wait for ball to launch
+                    if (launchTimer.seconds() >= FIRE_TIME) {
+                        launchState = LaunchState.RESETTING;
+                        launchTimer.reset();
+                        Trigger.setPosition(TRIGGER_START_POS);
+                        launchMotor.setPower(0.0);
+                        telemetry.addData("🚀 Launch", "Resetting...");
+                    }
+                    break;
+
+                case RESETTING:
+                    // Wait for trigger to reset, then return to idle
+                    if (launchTimer.seconds() >= RESET_TIME) {
+                        launchState = LaunchState.IDLE;
+                        telemetry.addData("🚀 Launch", "Ready");
+                    }
+                    break;
+            }
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", frontLeftPower, frontRightPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", backLeftPower, backRightPower);
+            telemetry.addData("Launch State", launchState);
+            telemetry.addData("Intake Jitter", intakeJitterState);
+            telemetry.addLine("\n--- GAMEPAD 1 (DRIVER) ---");
+            telemetry.addData("Left Trigger", "AprilTag Lock-On");
+            telemetry.addData("Y Button", "Test Rollers");
+            telemetry.addLine("\n--- GAMEPAD 2 (OPERATOR) ---");
+            telemetry.addData("Left Trigger", "Quick Shot (1.0s)");
+            telemetry.addData("Right Trigger", "Power Shot (2.2s)");
+            telemetry.addData("A Button", "Intake + Rollers");
+            telemetry.addData("Y Button", "Reverse Intake");
+            telemetry.addData("X Button", "Intake Jitter");
+            telemetry.addData("B Button", "Slow Intake");
             telemetry.update();
         }
     }
+
     private void initAprilTag() {
 
         // Create the AprilTag processor.
@@ -205,23 +406,7 @@ public class AprilTagDT extends LinearOpMode {
                 .setDrawCubeProjection(true)
                 .setDrawTagOutline(true)
                 .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
-
-                // == CAMERA CALIBRATION ==
-                // If you do not manually specify calibration parameters, the SDK will attempt
-                // to load a predefined calibration for your camera.
-                //.setLensIntrinsics(578.272, 578.272, 402.145, 221.506)
-                // ... these parameters are fx, fy, cx, cy.
-
                 .build();
-
-        // Adjust Image Decimation to trade-off detection-range for detection-rate.
-        // eg: Some typical detection data using a Logitech C920 WebCam
-        // Decimation = 1 ..  Detect 2" Tag from 10 feet away at 10 Frames per second
-        // Decimation = 2 ..  Detect 2" Tag from 6  feet away at 22 Frames per second
-        // Decimation = 3 ..  Detect 2" Tag from 4  feet away at 30 Frames Per Second (default)
-        // Decimation = 3 ..  Detect 5" Tag from 10 feet away at 30 Frames Per Second (default)
-        // Note: Decimation can be changed on-the-fly to adapt during a match.
-        //aprilTag.setDecimation(3);
 
         // Create the vision portal by using a builder.
         VisionPortal.Builder builder = new VisionPortal.Builder();
@@ -233,28 +418,14 @@ public class AprilTagDT extends LinearOpMode {
             builder.setCamera(BuiltinCameraDirection.BACK);
         }
 
-        // Choose a camera resolution. Not all cameras support all resolutions.
-        //builder.setCameraResolution(new Size(1280, 720));
-
-        // Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
+        // Enable the RC preview (LiveView).
         builder.enableLiveView(true);
-
-        // Set the stream format; MJPEG uses less bandwidth than default YUY2.
-        //builder.setStreamFormat(VisionPortal.StreamFormat.YUY2);
-
-        // Choose whether or not LiveView stops if no processors are enabled.
-        // If set "true", monitor shows solid orange screen if no processors enabled.
-        // If set "false", monitor shows camera view without annotations.
-        //builder.setAutoStopLiveView(false);
 
         // Set and enable the processor.
         builder.addProcessor(aprilTag);
 
         // Build the Vision Portal, using the above settings.
         visionPortal = builder.build();
-
-        // Disable or re-enable the aprilTag processor at any time.
-        //visionPortal.setProcessorEnabled(aprilTag, true);
 
     }   // end method initAprilTag()
 
@@ -287,8 +458,8 @@ public class AprilTagDT extends LinearOpMode {
                 tagBearing = detection.ftcPose.bearing;
                 tagElevation = detection.ftcPose.elevation;
 
-                tagId = detection.id;        // ID of the tag being tracked
-                tagVisible = true; // true if a tag was seen this frame
+                tagId = detection.id;
+                tagVisible = true;
 
             }
             else {
@@ -307,4 +478,19 @@ public class AprilTagDT extends LinearOpMode {
         telemetry.addLine("RBE = Range, Bearing & Elevation");
 
     }   // end method telemetryAprilTag()
+
+    public void configurePinpoint(){
+        pinpoint.setOffsets(-84.0, -168.0, DistanceUnit.MM);
+        pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+        pinpoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD,
+                GoBildaPinpointDriver.EncoderDirection.FORWARD);
+        pinpoint.resetPosAndIMU();
+    }
+
+    // Helper to convert degrees (0–300 typical) to normalized 0.0–1.0 servo position
+    private static double degToPos(double degrees) {
+        // goBILDA servos typically rotate ~300 degrees over full 0–1 range
+        return Range.clip(degrees / 300.0, 0.0, 1.0);
+    }
+
 }
