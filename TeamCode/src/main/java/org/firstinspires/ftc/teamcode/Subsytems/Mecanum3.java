@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 @TeleOp
-public class Mecanum  extends LinearOpMode {
+public class Mecanum3 extends LinearOpMode {
     public DcMotor motorOne,motorTwo,motorThree;
     @Override
     public void runOpMode() throws InterruptedException {

@@ -3,10 +3,10 @@
 <!--    <Webcam name="Gripper Webcam" serialNumber="VendorProduct:vendor=0x090c|product=0x037c|connection=" />-->
     <LynxUsbDevice name="Control Hub Portal" serialNumber="(embedded)" parentModuleAddress="173">
         <LynxModule name="Control Hub" port="173">
-<!--            <goBILDA5202SeriesMotor name="frontRightMotor" port="3" />-->
-            <goBILDA5202SeriesMotor name="motorThree" port="2" />
-            <goBILDA5202SeriesMotor name="motorTwo" port="1" />
-            <goBILDA5202SeriesMotor name="motorOne" port="0" />
+            <goBILDA5202SeriesMotor name="rightBack" port="3" />
+            <goBILDA5202SeriesMotor name="leftFront" port="2" />
+            <goBILDA5202SeriesMotor name="rightFront" port="1" />
+            <goBILDA5202SeriesMotor name="leftBack" port="0" />
 <!--            <Servo name="gripperServo" port="0"/>-->
 <!--            <Servo name="pitchV4BServo" port="1"/>-->
 <!--            <Servo name="pivotServo" port="2"/>-->
@@ -23,7 +23,7 @@
 <!--            <goBILDA5202SeriesMotor name="rightPivotMotor" port="1" />-->
 <!--            <goBILDA5202SeriesMotor name="leftSlidesMotor" port="2" />-->
 <!--            <goBILDA5202SeriesMotor name="rightSlidesMotor" port="3" />-->
-<!--            <goBILDAPinpointRR name="pinpoint" port="0"/>-->
+            <goBILDAPinpointRR name="pinpoint" port="0"/>
 <!--            <Servo name="rightFlapServo" port="0"/>-->
 <!--            <Servo name="leftFlapServo" port="2"/>-->
 <!--        </LynxModule>-->
