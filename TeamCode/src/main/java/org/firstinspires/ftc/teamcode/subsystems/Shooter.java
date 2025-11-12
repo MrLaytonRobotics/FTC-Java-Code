@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import android.util.Log;
+
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -44,8 +46,8 @@ public class Shooter extends SubsystemBase {
         shootert.setRunMode(MotorEx.RunMode.RawPower);
         turret.setRunMode(MotorEx.RunMode.RawPower);
 
-        controllerShooter.setPID(p, i, d);
-        controllerTurret.setPID(pT, iT, dT);
+        controllerShooter = new PIDController(p, i, d);
+        controllerTurret = new PIDController(pT, iT, dT);
 
         RPM.add(0, 330);
         RPM.add(39, 330);
@@ -104,5 +106,7 @@ public class Shooter extends SubsystemBase {
             shooterb.set(0);
             shootert.set(0);
         }
+
+        Log.d("Turret angle", String.valueOf(targetAngleDeg));
     }
 }
