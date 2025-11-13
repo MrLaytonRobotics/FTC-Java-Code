@@ -46,6 +46,4 @@ public class motorfinder extends LinearOpMode {
                 }
             }
         }
-    }
-
 }
