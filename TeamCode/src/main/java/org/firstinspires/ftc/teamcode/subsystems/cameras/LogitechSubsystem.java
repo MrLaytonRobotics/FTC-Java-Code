@@ -21,11 +21,21 @@ public class LogitechSubsystem {
 
     public static String obelisk;
 
+    private static String alliance;
+
+    private static int targetid;
+
     private AprilTagProcessor aprilTag;
 
     private VisionPortal visionPortal;
 
-    public void intiAprilTag(Hardware hw){
+    public LogitechSubsystem(Hardware hw, String alliance) {
+        if (alliance == "blue") {
+            targetid = 20;
+        } else if (alliance == "red"){
+            targetid = 24;
+        }
+
         aprilTag = new AprilTagProcessor.Builder()
                 .setDrawTagOutline(true)
                 .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
@@ -47,7 +57,8 @@ public class LogitechSubsystem {
         // Build the Vision Portal, using the above settings.
         visionPortal = builder.build();
     }
-    public void pattern(){
+
+    public void pattern() {
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
         for (AprilTagDetection detection : currentDetections) {
             if (detection.metadata != null && (detection.id == 21 || detection.id == 22 || detection.id == 23)) {
@@ -55,8 +66,27 @@ public class LogitechSubsystem {
             }
         }
 
+
+        if (obelisk == "PPG") {
+
+        } else if (obelisk == "PPG") {
+
+        }
     }
-    public void telemetryAprilTag(Telemetry telemetry){
+
+    public void targetApril(Telemetry telemetry) {
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.metadata != null && detection.id == targetid) {
+                telemetry.addData("April tag height ", detection.ftcPose.z);
+                telemetry.addData("April tag angle ", detection.ftcPose.yaw);
+                telemetry.addData("April tag id ", targetid);
+            }
+        }
+
+    }
+
+    public void telemetryAprilTag(Telemetry telemetry) {
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
         telemetry.addData("# AprilTags Detected", currentDetections.size());
 

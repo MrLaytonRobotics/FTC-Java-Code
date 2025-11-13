@@ -66,9 +66,6 @@ class MecanumSubsystem {
         hw.rf.setDirection(DcMotorSimple.Direction.FORWARD);
         hw.rb.setDirection(DcMotorSimple.Direction.FORWARD);
 
-
-
-
         // set motor behaviour
         hw.lb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         hw.lf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
