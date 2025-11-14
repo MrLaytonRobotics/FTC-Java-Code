@@ -11,7 +11,9 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.util.GoBildaPinpointDriver;
+import org.openftc.easyopencv.OpenCvWebcam;
 
 public class Hardware {
 
@@ -19,7 +21,8 @@ public class Hardware {
     private static Hardware instance;
 
     // Motors
-//  public Limelight3A limelight;
+    public Limelight3A limelight;
+    public WebcamName logitech;
     public final DcMotorEx intake;
     public final Servo sorter;
     public final Servo pusher;
@@ -38,10 +41,12 @@ public class Hardware {
         this.rf = hwMap.get(DcMotorEx.class, Specifications.FTRT_MOTOR); //rightforward
         this.lf = hwMap.get(DcMotorEx.class, Specifications.FTLF_MOTOR); //leftforward
         this.lb = hwMap.get(DcMotorEx.class, Specifications.BKLF_MOTOR); //leftback
-        this.rb = hwMap.get(DcMotorEx.class, Specifications.BKRT_MOTOR);//rightback
+        this.rb = hwMap.get(DcMotorEx.class, Specifications.BKRT_MOTOR); //rightback
 
         this.pusher = hwMap.get(Servo.class, Specifications.PUSHER);
-//        this.limelight = hwMap.get(Limelight3A.class, Specifications.LIME_LIGHT);
+        this.limelight = hwMap.get(Limelight3A.class, Specifications.LIME_LIGHT);
+        this.logitech = hwMap.get(WebcamName.class, Specifications.LOGITECH);
+
 
 
         this.intake = hwMap.get(DcMotorEx.class, Specifications.INTAKE);
@@ -51,13 +56,13 @@ public class Hardware {
 
 //
         this.pinPointOdo = hwMap.get(GoBildaPinpointDriver.class, Specifications.PIN_POINT_ODOMETRY);
-
     }
 
     public static Hardware getInstance(HardwareMap hwMap) {
         if (instance == null) {
             instance = new Hardware(hwMap);
         }
+
         return instance;
     }
 

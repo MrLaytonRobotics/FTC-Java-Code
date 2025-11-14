@@ -67,6 +67,7 @@ public class SampleTeleOpMode extends LinearOpMode {
         resetTimer = new ElapsedTime();
         hw.pusher.setPosition(PUSHER_DOWN);
         hw.sorter.setPosition(0);
+        hw.shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         while (opModeInInit()){
             if (gamepad1.b){
@@ -151,7 +152,7 @@ public class SampleTeleOpMode extends LinearOpMode {
             }
             previousBState = currentBState;
 
-            if (gamepad1.b && sorterTimer.milliseconds() > 500 && !isPusherUp){
+            if (gamepad1.b && sorterTimer.milliseconds() > 800 && !isPusherUp){
                 sorterTimer.reset();
                 if (sorterpos == 0) {
                     hw.sorter.setPosition(SORTER_FIRST_POS);//60 degrees
@@ -170,13 +171,14 @@ public class SampleTeleOpMode extends LinearOpMode {
     }
     public void processTelemetry(){
         //add telemetry messages here
-        telemetry.addData("resetTimer: ",  resetTimer.milliseconds());
+        //telemetry.addData("resetTimer: ",  resetTimer.milliseconds());
         telemetry.addLine("---------------------------------");
         telemetry.addData("X", mecanumCommand.getX());
         telemetry.addData("Y", mecanumCommand.getY());
         telemetry.addData("Pusher ON", isPusherUp);
         telemetry.addData("Pattern ", obelisk);
-        telemetry.addData("sorterpos", sorterpos);
+        telemetry.addData("Heading", mecanumCommand.getOdoHeading());
+        telemetry.addData("shooterpos", hw.shooter.getCurrentPosition());
         telemetry.update();
     }
 }
