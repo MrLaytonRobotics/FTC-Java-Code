@@ -34,7 +34,7 @@ public class LimelightSubsystem {
 
     public LimelightSubsystem(Hardware hw, Telemetry telemetry){
         this.hw = hw;
-//        this.limelight = hw.limelight;
+        this.limelight = hw.limelight;
 
         telemetry.setMsTransmissionInterval(11);
 

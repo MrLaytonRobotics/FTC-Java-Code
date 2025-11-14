@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.util.GoBildaPinpointDriver;
 
 public class Hardware {
@@ -31,6 +32,8 @@ public class Hardware {
     public final DcMotorEx shooter;
     //     Odometry
     public final GoBildaPinpointDriver pinPointOdo;
+    public WebcamName logitech;
+    public Limelight3A limelight;
 
     public Hardware(HardwareMap hwMap) {
 
@@ -41,7 +44,7 @@ public class Hardware {
         this.rb = hwMap.get(DcMotorEx.class, Specifications.BKRT_MOTOR);//rightback
 
         this.pusher = hwMap.get(Servo.class, Specifications.PUSHER);
-//        this.limelight = hwMap.get(Limelight3A.class, Specifications.LIME_LIGHT);
+        this.limelight = hwMap.get(Limelight3A.class, Specifications.LIME_LIGHT);
 
 
         this.intake = hwMap.get(DcMotorEx.class, Specifications.INTAKE);

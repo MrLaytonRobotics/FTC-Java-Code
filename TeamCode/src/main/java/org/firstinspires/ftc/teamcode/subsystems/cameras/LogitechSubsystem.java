@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems.cameras;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Hardware;
@@ -13,6 +14,7 @@ import java.util.List;
 
 public class LogitechSubsystem {
     private Hardware hw;
+    private WebcamName logitech;
     private static final boolean USE_WEBCAM = true;
 
     private static boolean GPP = false;
@@ -30,24 +32,27 @@ public class LogitechSubsystem {
     private VisionPortal visionPortal;
 
     public LogitechSubsystem(Hardware hw, String alliance) {
+        this.hw = hw;
+        this.logitech = hw.logitech;
+
         if (alliance == "blue") {
             targetid = 20;
         } else if (alliance == "red"){
             targetid = 24;
         }
 
+
         aprilTag = new AprilTagProcessor.Builder()
                 .setDrawTagOutline(true)
                 .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
                 .setTagLibrary(AprilTagGameDatabase.getDecodeTagLibrary())
                 .setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
-
                 .build();
 
         // Create the vision portal by using a builder.
         VisionPortal.Builder builder = new VisionPortal.Builder();
 
-//        builder.setCamera(hw.logitech);
+        builder.setCamera(logitech);
 
         builder.setAutoStopLiveView(true);
 
@@ -58,7 +63,7 @@ public class LogitechSubsystem {
         visionPortal = builder.build();
     }
 
-    public void pattern() {
+    public String pattern() {
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
         for (AprilTagDetection detection : currentDetections) {
             if (detection.metadata != null && (detection.id == 21 || detection.id == 22 || detection.id == 23)) {
@@ -66,12 +71,7 @@ public class LogitechSubsystem {
             }
         }
 
-
-        if (obelisk == "PPG") {
-
-        } else if (obelisk == "PPG") {
-
-        }
+        return obelisk;
     }
 
     public void targetApril(Telemetry telemetry) {
