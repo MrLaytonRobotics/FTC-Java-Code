@@ -34,6 +34,8 @@ public class Hardware {
     public final GoBildaPinpointDriver pinPointOdo;
     public WebcamName logitech;
     public Limelight3A limelight;
+    public Servo light;
+
 
     public Hardware(HardwareMap hwMap) {
 
@@ -52,6 +54,7 @@ public class Hardware {
         this.shooter = hwMap.get(DcMotorEx.class, Specifications.SHOOTER);
         this.sorter = hwMap.get(Servo.class, Specifications.SORTER);
         this.turret = hwMap.get(CRServo.class, Specifications.TURRET);
+        this.light = hwMap.get(Servo.class, Specifications.LIGHT);
 
 //
         this.pinPointOdo = hwMap.get(GoBildaPinpointDriver.class, Specifications.PIN_POINT_ODOMETRY);

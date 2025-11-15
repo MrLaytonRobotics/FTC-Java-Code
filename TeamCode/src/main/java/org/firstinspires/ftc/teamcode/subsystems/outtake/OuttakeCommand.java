@@ -27,7 +27,7 @@ public class OuttakeCommand {
 
     //returns whether or not we have reached the correctRPM
     public boolean isRPMReached(double currentRPM) {
-        return Math.abs(targetRPM - currentRPM) > 200;
+        return Math.abs(targetRPM - currentRPM) < 200;
     }
 
     public boolean spinup(){
@@ -38,6 +38,7 @@ public class OuttakeCommand {
 
         return isRPMReached(currentRPM);
     }
+
     public void stopShooter(){
         hw.shooter.setVelocity(0);
     }
