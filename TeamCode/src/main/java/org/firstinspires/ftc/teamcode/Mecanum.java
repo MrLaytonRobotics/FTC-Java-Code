@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -23,6 +24,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 @TeleOp(name="Mecanum")
 public class Mecanum extends LinearOpMode {
+
+    boolean inferno = true;
     ElapsedTime runtime = new ElapsedTime();
 
     // Declare OpMode members for each of the 4 motors.
@@ -84,10 +87,19 @@ public class Mecanum extends LinearOpMode {
 //            ta = result.getTa(); // How big the target looks (0%-100% of the image)
 //        }
 
-        motorFrontLeft.setDirection(DcMotor.Direction.REVERSE);
-        motorBackLeft.setDirection(DcMotor.Direction.FORWARD);
-        motorFrontRight.setDirection(DcMotor.Direction.FORWARD);
-        motorBackRight.setDirection(DcMotor.Direction.REVERSE);
+        if(inferno) {
+            motorFrontLeft.setDirection(DcMotor.Direction.REVERSE);
+            motorBackLeft.setDirection(DcMotor.Direction.FORWARD);
+            motorFrontRight.setDirection(DcMotor.Direction.FORWARD);
+            motorBackRight.setDirection(DcMotor.Direction.REVERSE);
+        }
+
+       else {
+            motorFrontLeft.setDirection(DcMotor.Direction.FORWARD);
+            motorBackLeft.setDirection(DcMotor.Direction.REVERSE);
+            motorFrontRight.setDirection(DcMotor.Direction.REVERSE);
+            motorBackRight.setDirection(DcMotor.Direction.FORWARD);
+        }
 
 
         // Wait for the game to start (driver presses START)
@@ -127,20 +139,28 @@ public class Mecanum extends LinearOpMode {
 
             double transferAngle = ((double)motorTransfer.getCurrentPosition()/28)*100/360;
 
-            //Shooter
-            if(gamepad2.right_bumper) {
-//                motorShooterLeft.setPower(1.0);
-//                motorShooterRight.setPower(-1.0);
-
-                motorShooterLeft.setVelocity(2400);
-                motorShooterRight.setVelocity(-2400);
+            if(gamepad2.right_bumper){
+                //motorShooterRight.setPower(1.0);
+                //motorShooterLeft.setPower(1.0);
+                if(shooterRightVelocity >= -2450){ //-.2600 works
+                    motorShooterRight.setPower(-1.0);
+                    motorShooterLeft.setPower(1.0);
+                    telemetry.addData("Shooting Speed:", "Speeding Up");
+                } else {
+                    motorShooterRight.setPower(-0.75);
+                    motorShooterLeft.setPower(0.75);
+                    telemetry.addData("Shooting Speed:", "Slowing Down");
+                }
+//                motorShooterRight.setTargetPosition(3500);
+//                motorShooterLeft.setTargetPosition(3500);
             }
-            else {
-                motorShooterLeft.setPower(0.0);
+            else{
                 motorShooterRight.setPower(0.0);
-//                motorShooterLeft.setVelocity(0);
-//                motorShooterRight.setVelocity(0);
+                motorShooterLeft.setPower(0.0);
+//                motorShooterRight.setTargetPosition(0);
+//                motorShooterLeft.setTargetPosition(0);
             }
+
 
 
             //Transfer
@@ -165,6 +185,8 @@ public class Mecanum extends LinearOpMode {
             if(gamepad2.x) {
                 motorIntake.setPower(1.0);
             }
+            else if(gamepad2.b){
+                motorIntake.setPower(-1.0);           }
             else{
                 motorIntake.setPower(0);
             }
@@ -262,7 +284,7 @@ public class Mecanum extends LinearOpMode {
 
             telemetry.addData("Shooter LEFT Velocity", shooterLeftVelocity);
             telemetry.addData("Shooter RIGHT Velocity", shooterRightVelocity);
-            telemetry.addData("Tranfer Angle", transferAngle);
+            telemetry.addData("Transfer Angle", transferAngle);
 
 
 

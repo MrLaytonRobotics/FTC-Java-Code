@@ -6,62 +6,103 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 
-@Autonomous(name = "Just Shoot")
-public class JustShoot extends LinearOpMode{
+
+@Autonomous(name = "JustShoot")
+public class JustShoot extends LinearOpMode {
     DcMotorEx motorShooterLeft;
     DcMotorEx motorShooterRight;
     DcMotor motorTransfer;
 
+    private enum State {
+        START,
+        READYSHOOTER,
+        SHOOT,
+        RAMPDOWN,
+        DRIVEBACK,
+        TURN,
+        DRIVEFORWARD,
+        STOP
+    }
+
     double timer;
-
-    double shooterLimit;
+    State currentState = State.START;
+    double shooterLimit = -2600;
     double shooterRightVelocity;
-
     int where;
 
     @Override
-    public void runOpMode(){ //throws InterruptedException
-        motorShooterLeft = (DcMotorEx)hardwareMap.get(DcMotor.class, "motorShooterLeft");
-        motorShooterRight = (DcMotorEx)hardwareMap.get(DcMotor.class, "motorShooterRight");
-        motorTransfer = (DcMotorEx)hardwareMap.get(DcMotor.class, "motorTransfer");
+    public void runOpMode() {
 
-        shooterLimit = -2700;
+        // Initialize hardware
+        motorShooterLeft = (DcMotorEx) hardwareMap.get(DcMotor.class, "motorShooterLeft");
+        motorShooterRight = (DcMotorEx) hardwareMap.get(DcMotor.class, "motorShooterRight");
+        motorTransfer = (DcMotorEx) hardwareMap.get(DcMotor.class, "motorTransfer");
 
         timer = 0;
+        where = 0;
 
         waitForStart();
 
-        where = 0;
+        if (opModeIsActive()) {
+            while (opModeIsActive()) {
+                telemetry.addData("Status", "Initialized");
+                telemetry.addData("Where", where);
+                telemetry.addData("Current State", currentState);
+                telemetry.addData("Right Velocity", shooterRightVelocity);
+                shooterRightVelocity = ((motorShooterRight.getVelocity() / 28) * 60);
+                telemetry.update();
 
-        telemetry.addData("Status", "Initialized");
-        telemetry.addData("Where", where);
-        telemetry.addData("Left Velocity", shooterRightVelocity);
-        telemetry.update();
-        shooterRightVelocity = ((motorShooterRight.getVelocity()/28)*60);
-
-
-        if(opModeIsActive()) {
-            if (shooterRightVelocity<2700 && timer <2000){
-                motorShooterLeft.setPower(1.0);
-                motorShooterRight.setPower(-1.0);
-                where = 1;
+                switch (currentState) {
+                    case START:
+                        motorShooterLeft.setPower(0);
+                        motorShooterRight.setPower(0);
+                        motorTransfer.setPower(0.0);
+                        timer++;
+                        if (timer > 100) {
+                            timer = 0;
+                            currentState = State.READYSHOOTER;
+                        }
+                        break;
+                    case READYSHOOTER:
+                        motorShooterLeft.setPower(1.0);
+                        motorShooterRight.setPower(-1.0);
+                        if (shooterRightVelocity < shooterLimit) {
+                            timer = 0;
+                            currentState = State.SHOOT;
+                        }
+                        break;
+                    case SHOOT:
+                        motorShooterLeft.setPower(1.0);
+                        motorShooterRight.setPower(-1.0);
+                        motorTransfer.setPower(-0.6);
+                        timer++;
+                        if (timer > 500) {
+                            timer = 0;
+                            currentState = State.RAMPDOWN;
+                        }
+                        break;
+                    case RAMPDOWN:
+                        motorShooterLeft.setPower(0.0);
+                        motorShooterRight.setPower(0.0);
+                        motorTransfer.setPower(0.3);
+                        timer++;
+                        if (timer > 500) {
+                            timer = 0;
+                            currentState = State.STOP;
+                        }
+                        break;
+                    case STOP:
+                        motorShooterLeft.setPower(0.0);
+                        motorShooterRight.setPower(0.0);
+                        motorTransfer.setPower(0.0);
+                        break;
+                    default:
+                        currentState = State.STOP;
+                        break;
+                }
             }
-            else if(shooterRightVelocity>2700 && timer <2000) {
-                motorShooterLeft.setPower(1.0);
-                motorShooterRight.setPower(-1.0);
-                motorTransfer.setPower(-0.6);
-                timer++;
-                where = 2;
-            }
-            else{
-                motorShooterLeft.setPower(0.0);
-                motorShooterRight.setPower(0.0);
-                motorTransfer.setPower(0.0);
-                where = 3;
-            }
 
-
-            sleep(200000);
+            sleep(200);
 
         }
     }
