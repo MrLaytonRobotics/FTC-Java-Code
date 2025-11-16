@@ -1,0 +1,22 @@
+name: Google Java Format
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  formatting:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Verify google-java-format compliance
+        uses: axel-op/googlejavaformat-action@v3
+        with:
+          args: "--dry-run --set-exit-if-changed"
