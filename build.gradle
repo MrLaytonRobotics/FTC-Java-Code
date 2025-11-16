@@ -4,6 +4,10 @@
  * It is extraordinarily rare that you will ever need to edit this file.
  */
 
+plugins {
+  id 'com.github.sherter.google-java-format' version '0.9'
+}
+
 buildscript {
     repositories {
         mavenCentral()
