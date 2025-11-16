@@ -2,22 +2,10 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import java.util.Locale;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import java.lang.annotation.Target;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx; // Import the DcMotorEx class
@@ -25,22 +13,14 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients; // Import for PIDF control
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
-import com.qualcomm.robotcore.hardware.IMU;
-import org.firstinspires.ftc.teamcode.AprilTagWebcam;
+// Import for PIDF control
 
 import java.util.List;
 
-
 @TeleOp(name = "week2Limelightv3", group = "Competition")
 //@Disabled
-public class week2limelightv1 extends LinearOpMode {
+public class Week2Limelightv1 extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
     // drive motors
@@ -72,10 +52,11 @@ public class week2limelightv1 extends LinearOpMode {
 
     private static final int TARGET_TAG_ID = 20;
 
+    boolean fieldBasedDriving = false;
+    double forward, strafe, rotate;
+
     @Override
     public void runOpMode() {
-
-
         telemetry.addData("Status", "Initializing...");
         telemetry.update();
 
@@ -153,13 +134,13 @@ public class week2limelightv1 extends LinearOpMode {
         CAMERA_ANGLE_RADIANS_H_PLANE = 0.1658;//Math.toRadians(25);//0.1658;
 
         // Now initialize the IMU with this mounting orientation
-        // Note: if you choose two conflicting directions, this initialization will cause a code exception.
-        while (!opModeIsActive()) {
+        imu = hardwareMap.get(IMU.class, "imu");
+        RevHubOrientationOnRobot RevOrientation = new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD);
 
-            telemetry.addData("Status", "Initialized. Ready to run!");
-            telemetry.update();
+        imu.initialize(new IMU.Parameters(RevOrientation));
 
-        }
         waitForStart();
         /*
         hold.setPosition(0.2);
@@ -173,36 +154,17 @@ public class week2limelightv1 extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            ///drive code
-            double y = gamepad1.left_stick_y;  // Forward
-            double x = -gamepad1.left_stick_x;  // Strafe
-            double rx = gamepad1.right_stick_x;  // Rotate
-
-            double frontLeftPower = y + x + rx;
-            double backLeftPower = y - x + rx;
-            double frontRightPower = y - x - rx;
-            double backRightPower = y + x - rx;
-
-            // Optional: Normalize powers if exceeding 1.0
-            double max = Math.max(Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower)),
-                    Math.max(Math.abs(backLeftPower), Math.abs(backRightPower)));
-            if (max > 1.0) {
-                frontLeftPower /= max;
-                backLeftPower /= max;
-                frontRightPower /= max;
-                backRightPower /= max;
+            if (fieldBasedDriving) {
+                fieldBasedDrive();
+            } else {
+                macanumDrive();
             }
-
-            frontLeft.setPower(frontLeftPower);
-            backLeft.setPower(backLeftPower);
-            frontRight.setPower(frontRightPower);
-            backRight.setPower(backRightPower);
             //end drive code
 
             // aprilTagWebcam.update();
             //AprilTagDetection id20 = aprilTagWebcam.getTagBySpecificId(20);
 
-            if (openHold == false) {
+            if (!openHold) {
                 /*if (id20 != null) {
                     distance = id20.ftcPose.range;
                     telemetry.addData( "Distance ", distance);
@@ -358,6 +320,11 @@ public class week2limelightv1 extends LinearOpMode {
                 }
             }
 
+            if (gamepad1.left_bumper) {
+                fieldBasedDriving = true;
+            } else if (gamepad1.right_bumper) {
+                fieldBasedDriving = false;
+            }
             //climber
             if(gamepad1.dpad_up || gamepad2.dpad_up)
             {
@@ -381,18 +348,75 @@ public class week2limelightv1 extends LinearOpMode {
 
             }
 
-
-
-
             // telemetry
             telemetry.addData("Status", "Initialized");
             telemetry.addData("--- Shooter ---", "");
             telemetry.addData("Actual Velocity", "%.2f", shooter.getVelocity());
             telemetry.addData("Shooter Power", "%.2f", shooter.getPower());
             telemetry.addData("Open Hold", openHold);
+            telemetry.addData("FieldBasedDriving", fieldBasedDriving);
             telemetry.update();
-
         }
+    }
+
+    private void fieldBasedDrive () {
+        forward = gamepad1.left_stick_y;
+        strafe = gamepad1.left_stick_x;
+        rotate = gamepad1.right_stick_x;
+
+        double theta = Math.atan2(forward, strafe);
+        double r = Math.hypot(strafe, forward);
+
+        theta = AngleUnit.normalizeRadians(theta - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
+        double newForward = r * Math.sin(theta);
+        double newStrafe = r * Math.cos(theta);
+
+        this.drive(newForward, newStrafe, rotate, /*maxPower*/ 1.0, /*maxSpeed*/ 1.0);
+    }
+
+    private void drive (double forward, double strafe, double rotate, double maxPower, double maxSpeed) {
+        double frontLeftPower = forward + strafe + rotate;
+        double frontRightPower = forward - strafe - rotate;
+        double backLeftPower = forward - strafe + rotate;
+        double backRightPower = forward + strafe - rotate;
+
+        maxPower = Math.max(maxPower, Math.abs(frontLeftPower));
+        maxPower = Math.max(maxPower, Math.abs(frontRightPower));
+        maxPower = Math.max(maxPower, Math.abs(backLeftPower));
+        maxPower = Math.max(maxPower, Math.abs(backRightPower));
+
+        frontLeft.setPower(maxSpeed * (frontLeftPower / maxPower));
+        frontRight.setPower(maxSpeed * (frontRightPower / maxPower));
+        backLeft.setPower(maxSpeed * (backLeftPower / maxPower));
+        backRight.setPower(maxSpeed * (backRightPower / maxPower));
+
+    }
+
+    private void macanumDrive() {
+        ///drive code
+        double y = gamepad1.left_stick_y;  // Forward
+        double x = -gamepad1.left_stick_x;  // Strafe
+        double rx = gamepad1.right_stick_x;  // Rotate
+
+        double frontLeftPower = y + x + rx;
+        double backLeftPower = y - x + rx;
+        double frontRightPower = y - x - rx;
+        double backRightPower = y + x - rx;
+
+        // Optional: Normalize powers if exceeding 1.0
+        double max = Math.max(Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower)),
+                Math.max(Math.abs(backLeftPower), Math.abs(backRightPower)));
+        if (max > 1.0) {
+            frontLeftPower /= max;
+            backLeftPower /= max;
+            frontRightPower /= max;
+            backRightPower /= max;
+        }
+
+        frontLeft.setPower(frontLeftPower);
+        backLeft.setPower(backLeftPower);
+        frontRight.setPower(frontRightPower);
+        backRight.setPower(backRightPower);
     }
 
     private double calculateDistance(double targetYAngleRadians, Telemetry telemetry) {
