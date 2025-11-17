@@ -1,4 +1,9 @@
 # CVU RoboHawks FTC CenterStage
+<img width="580" height="773" alt="{2A5B1E5F-E812-4B0E-8AAD-A3AE5DBBC11F}" src="https://github.com/user-attachments/assets/acb144af-c66d-4c6c-9b81-d0a1a9f99f9b" />
+<img width="573" height="699" alt="{677F44B0-120B-431E-99E2-A11DCF7C94EA}" src="https://github.com/user-attachments/assets/61864ad0-cf7b-451a-91bd-a115862fdfe5" />
+<img width="495" height="597" alt="{35D09491-069C-4C37-95F9-0D01D901A069}" src="https://github.com/user-attachments/assets/701dbb8a-2757-4ccd-a5d9-f6b052ade005" />
+
+
 
 ## Notes
 
