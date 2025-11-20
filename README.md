@@ -21,14 +21,11 @@
     </style>
 </head>
 <body class="bg-gray-50 font-sans antialiased flex flex-col min-h-screen">
-
-    <!-- Header -->
     <header class="bg-white shadow-md p-4 flex items-center justify-center h-16">
         <h1 class="text-xl sm:text-2xl font-extrabold text-indigo-700">
             Pine Lake Robotics Team Website
         </h1>
     </header>
-
     <!-- Main Content Area for the Iframe -->
     <main class="flex-grow p-4 md:p-6 lg:p-8 overflow-hidden">
         <div class="max-w-7xl mx-auto h-screen-minus-header bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200">
@@ -45,7 +42,6 @@
             </iframe>
         </div>
     </main>
-    
     <!-- Footer for context -->
     <footer class="text-center p-2 text-sm text-gray-500 border-t">
         This content is displayed in an iframe from the source URL: https://pinelakeroboticteam.lovable.app/
