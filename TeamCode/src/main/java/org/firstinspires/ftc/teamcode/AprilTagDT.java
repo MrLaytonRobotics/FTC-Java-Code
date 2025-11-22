@@ -136,9 +136,22 @@ public class AprilTagDT extends LinearOpMode {
     private boolean tagVisible = false; // true if a tag was seen this frame
     private boolean isLockedOn = false; // true if aligned within tolerance
 
+     // Limelight + IMU utility class
+    private SharpFaceLimelight3A limelightIMU = null;
+
     @Override
     public void runOpMode() {
         initAprilTag();
+
+        // Initialize Limelight + IMU utility
+        try {
+            limelightIMU = new SharpFaceLimelight3A();
+            limelightIMU.init(hardwareMap);
+            telemetry.addData("Limelight/IMU", "Initialized");
+        } catch (Exception e) {
+            telemetry.addData("Limelight/IMU", "Not configured - skipping");
+            limelightIMU = null;
+        }
 
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.
@@ -186,6 +199,12 @@ public class AprilTagDT extends LinearOpMode {
         while (opModeIsActive()) {
             //updates the telemetry for the camera
             telemetryAprilTag();
+
+            // Update Limelight + IMU data
+            if (limelightIMU != null) {
+                limelightIMU.update();
+            }
+
             double max;
 
             // ===== GAMEPAD 1 (DRIVER) CONTROLS =====
@@ -263,6 +282,13 @@ public class AprilTagDT extends LinearOpMode {
             if (gamepad1.y) {
                 Roller1.setPosition(ROLLER_FORWARD);
                 Roller2.setPosition(ROLLER_FORWARD);
+            }
+
+            if (limelightIMU != null) {
+                // Right trigger resets IMU yaw
+                if (gamepad1.right_trigger > 0.5) {
+                    limelightIMU.resetIMUYaw();
+                }
             }
 
             // ===== GAMEPAD 2 (OPERATOR) CONTROLS =====
@@ -394,7 +420,38 @@ public class AprilTagDT extends LinearOpMode {
             telemetry.addData("Y Button", "Reverse Intake");
             telemetry.addData("X Button", "Intake Jitter");
             telemetry.addData("B Button", "Slow Intake");
+
+            // Display Limelight + IMU data if available
+            if (limelightIMU != null && limelightIMU.isInitialized()) {
+                telemetry.addLine("\n━━━ LIMELIGHT + IMU ━━━");
+                telemetry.addData("Pipeline", limelightIMU.getCurrentPipeline());
+                telemetry.addData("Limelight Target", limelightIMU.hasValidTarget() ? "LOCKED" : "No Target");
+
+                if (limelightIMU.hasValidTarget()) {
+                    telemetry.addData("Vision Yaw/Pitch/Roll", "%.1f° / %.1f° / %.1f°",
+                    limelightIMU.getVisionYaw(),
+                    limelightIMU.getVisionPitch(),
+                    limelightIMU.getVisionRoll());
+                    telemetry.addData("Target TX/TY", "%.1f° / %.1f°",
+                    limelightIMU.getTargetX(),
+                    limelightIMU.getTargetY());
+                }
+
+                telemetry.addData("IMU Yaw/Pitch/Roll", "%.1f° / %.1f° / %.1f°",
+                limelightIMU.getIMUYaw(),
+                limelightIMU.getIMUPitch(),
+                limelightIMU.getIMURoll());
+
+                telemetry.addData("D-Pad", "Switch Pipelines (0-3)");
+                telemetry.addData("Right Trigger", "Reset IMU Yaw");
+            }
+
             telemetry.update();
+        }
+
+       // Cleanup
+        if (limelightIMU != null) {
+            limelightIMU.stop();
         }
     }
 
