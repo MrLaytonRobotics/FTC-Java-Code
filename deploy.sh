@@ -3,7 +3,7 @@ echo ""
 echo "=== FTC DEPLOY ==="
 echo ""
 
-PATH="/Users/omsavani/Library/Android/sdk/platform-tools:$PATH"
+export PATH="/Users/$(whoami)/Library/Android/sdk/platform-tools:$PATH"
 
 # Auto-connect + show connection
 adb connect 192.168.43.1:5555 2>/dev/null
