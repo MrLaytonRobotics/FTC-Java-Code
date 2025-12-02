@@ -28,7 +28,7 @@ public class Drivetrain {
         rightMotor = hwMap.get(DcMotor.class, "rightMotor");
 
         // Configure motors with any extra features, such as reversing direction to account for installation.
-        rightMotor.setDirection(DcMotorSimple.Direction.REVERSE); // This reverses the standard direction of the motor when power is applied.
+        leftMotor.setDirection(DcMotorSimple.Direction.REVERSE); // This reverses the standard direction of the motor when power is applied.
         leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // This allows the motors to run using the built in encoders to track motor rotations.
         rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -42,7 +42,8 @@ public class Drivetrain {
         leftMotor.setPower(leftPower);
         rightMotor.setPower(rightPower);
 
-        telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
+        telemetry.addData("Motors","left (%2f) , right (%2f)", leftPower,rightPower);
+        //telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
         telemetry.update();
     }
 
@@ -60,9 +61,12 @@ public class Drivetrain {
         rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         leftMotor.setPower(Math.abs(speed));
         rightMotor.setPower(Math.abs(speed));
+/*
         while ((leftMotor.isBusy() || rightMotor.isBusy()) && autoDriveTimer.milliseconds() < timeout_ms) {
             sleep(50);
         }
+*/
+        sleep(10000);
         leftMotor.setPower(0);
         rightMotor.setPower(0);
         leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
