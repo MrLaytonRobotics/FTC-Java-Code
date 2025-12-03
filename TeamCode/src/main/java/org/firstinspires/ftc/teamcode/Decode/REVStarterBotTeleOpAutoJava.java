@@ -178,7 +178,7 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
     }
 
     /**
-     * The far power velocity is intended for launching balls a few feet from the goal. It may require adjusting the deflector.
+     * The far (away) power velocity is intended for launching balls a few feet from the goal. It may require adjusting the deflector.
      * When running this function, the flywheel will spin up and the Core Hex will wait before balls can be fed.
      * The servo will spin until the bumper is released.
      */
