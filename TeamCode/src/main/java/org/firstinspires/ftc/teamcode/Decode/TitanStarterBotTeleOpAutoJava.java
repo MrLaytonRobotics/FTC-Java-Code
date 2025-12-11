@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
@@ -39,7 +40,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flywheel.setDirection(DcMotor.Direction.REVERSE);
         coreHex.setDirection(DcMotor.Direction.REVERSE);
-        leftDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftDrive.setDirection(DcMotor.Direction.REVERSE);
         //Ensures the servo is active and ready
         servo.setPower(0);
 
@@ -113,7 +114,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
         X = gamepad1.right_stick_x; // x=right joy stick so x can move the robot left to right
         Y = -gamepad1.left_stick_y;// y= left joy stick  so the left joy stick can go up and down
         leftDrive.setPower(Y - X);
-        rightDrive.setPower(X + Y);
+        rightDrive.setPower(Y + X);
     }
 
     /**
