@@ -228,7 +228,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
             telemetry.addData("RUNNING OPMODE", operationSelected);
             telemetry.update();
             // Back Up
-             autoDrive(0.5, 12, 12, 5000);
+             autoDrive(0.5, -21, -21, 5000);
             // Fire balls
             autoLaunchTimer.reset();
             while (opModeIsActive() && autoLaunchTimer.milliseconds() < 10000) {
