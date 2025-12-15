@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
@@ -22,6 +21,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
     private static final int maxVelocity = 2200;
     private static final String TELEOP = "TELEOP";
     private static final String AUTO_BLUE = "AUTO BLUE";
+    private static final String AUTO_BACK_BLUE = "AUTO BACK BLUE";
     private static final String AUTO_RED = " AUTO RED";
     private String operationSelected = TELEOP;
     private double WHEELS_INCHES_TO_TICKS = (28 * 5 * 3) / (3 * Math.PI);
@@ -54,6 +54,8 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
             doAutoBlue();
         } else if (operationSelected.equals(AUTO_RED)) {
             doAutoRed();
+        } else if (operationSelected.equals(AUTO_BACK_BLUE)){
+            doAutoBackBlue();
         } else {
             doTeleOp();
         }
@@ -70,8 +72,12 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
             } else if (state.equals(AUTO_BLUE)) {
                 state = AUTO_RED;
             } else if (state.equals(AUTO_RED)) {
+                //state = TELEOP;
+                state = AUTO_BACK_BLUE;
+            } else if (state.equals(AUTO_BACK_BLUE)) {
                 state = TELEOP;
-            } else {
+            }
+            else {
                 telemetry.addData("WARNING", "Unknown Operation State Reached - Restart Program");
             }
         }
@@ -247,6 +253,19 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
             autoDrive(1, -50, -50, 5000);
         }
     }
+
+    private void doAutoBackBlue() {
+        if (opModeIsActive()) {
+            telemetry.addData("RUNNING OPMODE", operationSelected);
+            telemetry.update();
+            autoDrive(0.5, -20, -20, 5000);
+        }
+
+
+    }
+
+
+
 
     /**
      * Red Alliance Autonomous
