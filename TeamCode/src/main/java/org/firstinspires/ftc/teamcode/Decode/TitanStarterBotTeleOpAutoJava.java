@@ -118,7 +118,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
         float Y;
 
         X = gamepad1.right_stick_x; // x=right joy stick so x can move the robot left to right
-        Y = -gamepad1.left_stick_y;// y= left joy stick  so the left joy stick can go up and down
+        Y = gamepad1.left_stick_y;// y= left joy stick  so the left joy stick can go up and down
         leftDrive.setPower(Y - X);
         rightDrive.setPower(Y + X);
     }
@@ -146,7 +146,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
         double smoothThrottle;
         double smoothRotation;
 
-        throttle = -gamepad1.left_stick_y;
+        throttle = gamepad1.left_stick_y;
         rotation = gamepad1.right_stick_x;
 
         smoothThrottle = squareInputWithSign(throttle);
@@ -242,8 +242,8 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
      */
     private void autoDrive(double speed, int leftDistanceInch, int rightDistanceInch, int timeout_ms) {
         autoDriveTimer.reset();
-        leftDrive.setTargetPosition((int) (leftDrive.getCurrentPosition() + leftDistanceInch * WHEELS_INCHES_TO_TICKS));
-        rightDrive.setTargetPosition((int) (rightDrive.getCurrentPosition() + rightDistanceInch * WHEELS_INCHES_TO_TICKS));
+        leftDrive.setTargetPosition((int) (leftDrive.getCurrentPosition() - leftDistanceInch * WHEELS_INCHES_TO_TICKS));
+        rightDrive.setTargetPosition((int) (rightDrive.getCurrentPosition() - rightDistanceInch * WHEELS_INCHES_TO_TICKS));
         leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         leftDrive.setPower(Math.abs(speed));
@@ -278,12 +278,12 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
             ((DcMotorEx) flywheel).setVelocity(0);
             coreHex.setPower(0);
             servo.setPower(0);
-            // Back Up
-            autoDrive(0.5, 12, 12, 5000);
+            // Back Up, not needed as we back up from before we fire artifacts, remove later
+            //autoDrive(0.5, -12, -12, 5000);
             // Turn
-            autoDrive(0.5, -8, 8, 5000);
+            autoDrive(0.5, 8, -8, 5000);
             // Drive off Line
-            autoDrive(1, -50, -50, 5000);
+            autoDrive(.5, -50, -50, 5000);
         }
     }
 
@@ -310,6 +310,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
             telemetry.addData("RUNNING OPMODE", operationSelected);
             telemetry.update();
             // Fire balls
+            autoDrive(0.5, 21, 21, 5000);
             autoLaunchTimer.reset();
             while (opModeIsActive() && autoLaunchTimer.milliseconds() < 10000) {
                 BANK_SHOT_AUTO();
@@ -319,12 +320,11 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
             ((DcMotorEx) flywheel).setVelocity(0);
             coreHex.setPower(0);
             servo.setPower(0);
-            // Back Up
-            autoDrive(0.5, -12, -12, 5000);
+
             // Turn
-            autoDrive(0.5, 8, -8, 5000);
+            autoDrive(0.5, -8, 8, 5000);
             // Drive off Line
-            autoDrive(1, -50, -50, 5000);
+            autoDrive(.5, 50, 50, 5000);
         }
     }
 }
