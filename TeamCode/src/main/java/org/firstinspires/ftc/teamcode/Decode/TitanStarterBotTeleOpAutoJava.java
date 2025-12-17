@@ -246,7 +246,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
             coreHex.setPower(0);
             servo.setPower(0);
             // Back Up
-            autoDrive(0.5, -12, -12, 5000);
+            autoDrive(0.5, 12, 12, 5000);
             // Turn
             autoDrive(0.5, -8, 8, 5000);
             // Drive off Line
