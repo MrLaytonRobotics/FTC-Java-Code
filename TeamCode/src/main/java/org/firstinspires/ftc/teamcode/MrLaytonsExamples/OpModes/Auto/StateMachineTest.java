@@ -8,6 +8,7 @@ public class StateMachineTest extends OpMode {
 
     Drivetrain drivetrain = new Drivetrain();
 
+    // Create enum to use names for the states instead of numbers
     enum State {
         WAIT_FOR_A,
         WAIT_FOR_B,
