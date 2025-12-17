@@ -21,7 +21,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
     private static final int maxVelocity = 2200;
     private static final String TELEOP = "TELEOP";
     private static final String AUTO_BLUE = "AUTO BLUE";
-    private static final String AUTO_BACK_BLUE = "AUTO BACK BLUE";
+    private static final String AUTO_BACK_LINE = "AUTO BACK LINE";
     private static final String AUTO_RED = " AUTO RED";
     private String operationSelected = TELEOP;
     private double WHEELS_INCHES_TO_TICKS = (28 * 5 * 3) / (3 * Math.PI);
@@ -54,8 +54,8 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
             doAutoBlue();
         } else if (operationSelected.equals(AUTO_RED)) {
             doAutoRed();
-        } else if (operationSelected.equals(AUTO_BACK_BLUE)){
-            doAutoBackBlue();
+        } else if (operationSelected.equals(AUTO_BACK_LINE)){
+            doAutoBackLine();
         } else {
             doTeleOp();
         }
@@ -73,8 +73,8 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
                 state = AUTO_RED;
             } else if (state.equals(AUTO_RED)) {
                 //state = TELEOP;
-                state = AUTO_BACK_BLUE;
-            } else if (state.equals(AUTO_BACK_BLUE)) {
+                state = AUTO_BACK_LINE;
+            } else if (state.equals(AUTO_BACK_LINE)) {
                 state = TELEOP;
             }
             else {
@@ -121,6 +121,39 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
         Y = -gamepad1.left_stick_y;// y= left joy stick  so the left joy stick can go up and down
         leftDrive.setPower(Y - X);
         rightDrive.setPower(Y + X);
+    }
+
+    // This the helper method to square the input values before using them to power the robot.
+    // It needs to make sure the negative sign is reapplied after squaring, for left and backwards movement
+    double squareInputWithSign(double input) {
+        double output = input * input;
+        if (input < 0) {
+            output = output * -1;
+        }
+        return output;
+    }
+
+    /**
+     * The below is the arcade drive controls with smoothing for easier control
+     * It squares the input from our gamepad.
+     * For values below 1 this makes them smaller, which increases our control.
+     * As we get closer to 1, the stick all the way, it gets closer to full power.
+     * This allows us to run the robot at full speed when needed but have precise control.
+     */
+    private void smoothSplitStickArcadeDrive() {
+        double throttle;
+        double rotation;
+        double smoothThrottle;
+        double smoothRotation;
+
+        throttle = -gamepad1.left_stick_y;
+        rotation = gamepad1.right_stick_x;
+
+        smoothThrottle = squareInputWithSign(throttle);
+        smoothRotation = squareInputWithSign(rotation);
+
+        leftDrive.setPower(smoothThrottle - smoothRotation);
+        rightDrive.setPower(smoothThrottle + smoothRotation);
     }
 
     /**
@@ -254,7 +287,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
         }
     }
 
-    private void doAutoBackBlue() {
+    private void doAutoBackLine() {
         if (opModeIsActive()) {
             telemetry.addData("RUNNING OPMODE", operationSelected);
             telemetry.update();
