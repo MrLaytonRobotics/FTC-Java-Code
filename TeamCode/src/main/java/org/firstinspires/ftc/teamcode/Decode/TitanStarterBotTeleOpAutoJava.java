@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
 
     private DcMotor flywheel;
+    private  DcMotor flywheel2;
     private DcMotor coreHex;
     private DcMotor leftDrive;
     private CRServo servo;
@@ -31,6 +32,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
     @Override
     public void runOpMode() {
         flywheel = hardwareMap.get(DcMotor.class, "flywheel");
+        flywheel2 = hardwareMap.get(DcMotor.class, "flywheel2");
         coreHex = hardwareMap.get(DcMotor.class, "coreHex");
         leftDrive = hardwareMap.get(DcMotor.class, "leftDrive");
         servo = hardwareMap.get(CRServo.class, "servo");
@@ -39,6 +41,8 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
         // Establishing the direction and mode for the motors
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flywheel.setDirection(DcMotor.Direction.REVERSE);
+        flywheel2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flywheel2.setDirection(DcMotor.Direction.REVERSE);
         coreHex.setDirection(DcMotor.Direction.REVERSE);
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         //Ensures the servo is active and ready
@@ -103,6 +107,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
                 setFlywheelVelocity();
                 manualCoreHexAndServoControl();
                 telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
+                telemetry.addData("Flywheel Velocity2", ((DcMotorEx) flywheel2).getVelocity());
                 telemetry.addData("Flywheel Power", flywheel.getPower());
                 telemetry.update();
             }
@@ -182,16 +187,20 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
     private void setFlywheelVelocity() {
         if (gamepad1.options) {
             flywheel.setPower(-0.5);
+            flywheel2.setPower(-0.5);
         } else if (gamepad1.left_bumper) {
             FAR_POWER_AUTO();
         } else if (gamepad1.right_bumper) {
             BANK_SHOT_AUTO();
         } else if (gamepad1.circle) {
             ((DcMotorEx) flywheel).setVelocity(bankVelocity);
+            ((DcMotorEx) flywheel2).setVelocity(bankVelocity);
         } else if (gamepad1.square) {
             ((DcMotorEx) flywheel).setVelocity(maxVelocity);
+            ((DcMotorEx) flywheel2).setVelocity(maxVelocity);
         } else {
             ((DcMotorEx) flywheel).setVelocity(0);
+            ((DcMotorEx) flywheel2).setVelocity(0);
             coreHex.setPower(0);
             // The check below is in place to prevent stuttering with the servo. It checks if the servo is under manual control!
             if (!gamepad1.dpad_right && !gamepad1.dpad_left) {
@@ -199,6 +208,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
             }
         }
     }
+
 
 //Automatic Flywheel controls used in Auto and TeleOp
 
@@ -209,8 +219,10 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
      */
     private void BANK_SHOT_AUTO() {
         ((DcMotorEx) flywheel).setVelocity(bankVelocity);
+        ((DcMotorEx) flywheel2).setVelocity(bankVelocity);
         servo.setPower(-1);
         if (((DcMotorEx) flywheel).getVelocity() >= bankVelocity - 50) {
+            // just use the speed of the one flywheel to set target
             coreHex.setPower(1);
         } else {
             coreHex.setPower(0);
@@ -224,6 +236,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
      */
     private void FAR_POWER_AUTO() {
         ((DcMotorEx) flywheel).setVelocity(farVelocity);
+        ((DcMotorEx) flywheel2).setVelocity(farVelocity);
         servo.setPower(-1);
         if (((DcMotorEx) flywheel).getVelocity() >= farVelocity - 100) {
             coreHex.setPower(1);
@@ -276,6 +289,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
                 telemetry.update();
             }
             ((DcMotorEx) flywheel).setVelocity(0);
+            ((DcMotorEx) flywheel2).setVelocity(0);
             coreHex.setPower(0);
             servo.setPower(0);
             // Back Up, not needed as we back up from before we fire artifacts, remove later
@@ -318,6 +332,7 @@ public class TitanStarterBotTeleOpAutoJava extends LinearOpMode {
                 telemetry.update();
             }
             ((DcMotorEx) flywheel).setVelocity(0);
+            ((DcMotorEx) flywheel2).setVelocity(0);
             coreHex.setPower(0);
             servo.setPower(0);
 
