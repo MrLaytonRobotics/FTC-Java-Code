@@ -7,9 +7,13 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp
-public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
+import org.firstinspires.ftc.teamcode.AprilTagWebcam;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
+@TeleOp
+public class StarterWithCam extends LinearOpMode {
+
+    AprilTagWebcam aprilTagWebcam = new AprilTagWebcam();
 
     private DcMotor flywheel;
     private DcMotor flywheel2;
@@ -19,11 +23,12 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
     private DcMotor rightDrive;
 
     private static final int bankVelocity = 1450;
-    private static final int farVelocity = 1750;
+    private static final int farVelocity = 1550;
     private static final int maxVelocity = 6000;
     private static final String TELEOP = "TELEOP";
     private static final String AUTO_BLUE = "AUTO BLUE";
-    private static final String AUTO_RED = " AUTO RED";
+    private static final String AUTO_RED = "AUTO RED";
+    private static final String AUTO_BACK = "AUTO BACK";
     private String operationSelected = TELEOP;
     private double WHEELS_INCHES_TO_TICKS = (28 * 5 * 3) / (3 * Math.PI);
     private ElapsedTime autoLaunchTimer = new ElapsedTime();
@@ -31,6 +36,9 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+
+        aprilTagWebcam.init(hardwareMap, telemetry);
+
         flywheel = hardwareMap.get(DcMotor.class, "flywheel");
         flywheel2 = hardwareMap.get(DcMotor.class, "flywheel2");
         coreHex = hardwareMap.get(DcMotor.class, "coreHex");
@@ -40,15 +48,15 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
 
         // Establishing the direction and mode for the motors
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        flywheel2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flywheel.setDirection(DcMotor.Direction.REVERSE);
+        flywheel2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flywheel2.setDirection(DcMotor.Direction.REVERSE);
         coreHex.setDirection(DcMotor.Direction.REVERSE);
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         //Ensures the servo is active and ready
         servo.setPower(0);
 
-        //On initilization the Driver Station will prompt for which OpMode should be run - Auto Blue, Auto Red, or TeleOp
+        //On initilization the Driver Station will prompt for which OpMode should be run - Auto Blue, Auto Red, Auto Back, or TeleOp
         while (opModeInInit()) {
             operationSelected = selectOperation(operationSelected, gamepad1.psWasPressed());
             telemetry.update();
@@ -58,13 +66,15 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
             doAutoBlue();
         } else if (operationSelected.equals(AUTO_RED)) {
             doAutoRed();
+        } else if (operationSelected.equals(AUTO_BACK)) {
+            doAutoBack();
         } else {
             doTeleOp();
         }
     }
 
     /**
-     * If the PS/Home button is pressed, the robot will cycle through the OpMode options following the if/else statement here.
+     * If the Home (Logitech) button is pressed, the robot will cycle through the OpMode options following the if/else statement here.
      * The telemetry readout to the Driver Station App will update to reflect which is currently selected for when "play" is pressed.
      */
     private String selectOperation(String state, boolean cycleNext) {
@@ -74,6 +84,8 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
             } else if (state.equals(AUTO_BLUE)) {
                 state = AUTO_RED;
             } else if (state.equals(AUTO_RED)) {
+                state = AUTO_BACK;
+            } else if (state.equals(AUTO_BACK)) {
                 state = TELEOP;
             } else {
                 telemetry.addData("WARNING", "Unknown Operation State Reached - Restart Program");
@@ -91,7 +103,9 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
     //TeleOp Code
 
     /**
-     * If TeleOp was selected or defaulted to, the following will be active upon pressing "play".
+     * Both flywheel codes add data to show the power and velocity of them
+     * They should have the same data, if not, the motors may break
+     * Apriltag code will display the data of the x,y,z,pitch,roll,yaw,range,bearing,and elevation of id 20 if close enough
      */
     private void doTeleOp() {
         if (opModeIsActive()) {
@@ -101,10 +115,14 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
                 setFlywheelVelocity();
                 manualCoreHexAndServoControl();
                 telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
-                telemetry.addData("Flywheel Velocity2", ((DcMotorEx) flywheel2).getVelocity());
+                telemetry.addData("Flywheel2 Velocity", ((DcMotorEx) flywheel2).getVelocity());
                 telemetry.addData("Flywheel Power", flywheel.getPower());
-                telemetry.addData("Flywheel Power", flywheel2.getPower());
+                telemetry.addData("Flywheel2 Power", flywheel2.getPower());
                 telemetry.update();
+                // update the vision portal
+                aprilTagWebcam.update();
+                AprilTagDetection id20 = aprilTagWebcam.getTagBySpecificId(20);
+                aprilTagWebcam.displayDetectionTelemetry(id20);
             }
         }
     }
@@ -142,10 +160,10 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
     }
 
     /**
-     * This if/else statement contains the controls for the flywheel1, both manual and auto.
-     * Circle and Square will s
-     * pin up ONLY the flywheel1 to the target velocity set.
-     * The bumpers will activate the flywheel1, Core Hex feeder, and servo to cycle a series of balls.
+     * This if/else statement contains the controls for flywheel1 and flywheel2, both manual and auto.
+     * Circle (B) will launch at bank velocity
+     * Square (X) will launch at max velocity
+     * The triggers will activate flywheel1 and flywheel2 at the same time, Core Hex feeder, and servo to keep the artifacts flowing smoothly
      */
 
 
@@ -177,9 +195,10 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
 //Automatic Flywheel controls used in Auto and TeleOp
 
     /**
-     * The bank shot or near velocity is intended for launching balls touching or a few inches from the goal.
-     * When running this function, the flywheel1 will spin up and the Core Hex will wait before balls can be fed.
-     * The servo will spin until the bumper is released.
+     * The bank shot or near velocity needs to launch about 3ft from the goal.
+     * When running this function, flywheel1 and flywheel2 will spin up and the Core Hex will wait before balls can be fed.
+     * The servo will spin until the trigger is released.
+     * Scores 2-3 artifacts per load.
      */
     private void BANK_SHOT_AUTO() {
         ((DcMotorEx) flywheel).setVelocity(bankVelocity);
@@ -193,9 +212,10 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
     }
 
     /**
-     * The far power velocity is intended for launching balls a few feet from the goal. It may require adjusting the deflector.
-     * When running this function, the flywheel1 will spin up and the Core Hex will wait before balls can be fed.
-     * The servo will spin until the bumper is released.
+     * The far power velocity launches from about 5ft from the goal. It's intended as a last resort.
+     * When running this function, flywheel1 and flywheel2 will spin up and the Core Hex will wait before balls can be fed.
+     * The servo will spin until the trigger is released.
+     * Scores 1-2 artifacts per load.
      */
     private void FAR_POWER_AUTO() {
         ((DcMotorEx) flywheel).setVelocity(farVelocity);
@@ -209,10 +229,10 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
     }
 
 //Autonomous Code
-//For autonomous, the robot will launch the pre-loaded 3 balls then back away from the goal, turn, and back up off the launch line.
-
     /**
-     * For autonomous, the robot is using a timer and encoders on the drivetrain to move away from the target.
+     * For autonomous, the robot will back up, launch the pre-loaded 3 balls then back away from the goal, turn, and back up off the launch line.
+     * It will also back up from the rear launch line, only scoring leave points.
+     * The robot is using a timer and encoders on the drivetrain to move away from the target.
      * This method contains the math to be used with the inputted distance for the encoders, resets the elapsed timer, and
      * provides a check for it to run so long as the motors are busy and the timer has not run out.
      */
@@ -235,7 +255,7 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
 
     /**
      * Blue Alliance Autonomous
-     * The robot will fire the pre-loaded balls until the 10 second timer ends.
+     * The robot will fire the pre-loaded balls until the 6 second timer ends.
      * Then it will back away from the goal and off the launch line.
      */
     private void doAutoBlue() {
@@ -243,10 +263,10 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
             telemetry.addData("RUNNING OPMODE", operationSelected);
             telemetry.update();
             // Back Up
-            autoDrive(0.5, 16, 16, 5000);
+            autoDrive(0.5, 36, 36, 5000);
             // Fire balls
             autoLaunchTimer.reset();
-            while (opModeIsActive() && autoLaunchTimer.milliseconds() < 10000) {
+            while (opModeIsActive() && autoLaunchTimer.milliseconds() < 6000) {
                 BANK_SHOT_AUTO();
                 telemetry.addData("Launcher Countdown", autoLaunchTimer.seconds());
                 telemetry.update();
@@ -256,7 +276,7 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
             coreHex.setPower(0);
             servo.setPower(0);
             // Back Up
-            autoDrive(0.5, 48, 48, 5000);
+            autoDrive(0.5, 28, 28, 5000);
             // Turn
             autoDrive(0.5, 16, -16, 5000);
             // Drive off Line
@@ -266,7 +286,7 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
 
     /**
      * Red Alliance Autonomous
-     * The robot will fire the pre-loaded balls until the 10 second timer ends.
+     * The robot will fire the pre-loaded balls until the 6 second timer ends.
      * Then it will back away from the goal and off the launch line.
      */
     private void doAutoRed() {
@@ -274,10 +294,10 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
             telemetry.addData("RUNNING OPMODE", operationSelected);
             telemetry.update();
             // Back Up
-            autoDrive(0.5, 16, 16, 5000);
+            autoDrive(0.5, 36, 36, 5000);
             // Fire balls
             autoLaunchTimer.reset();
-            while (opModeIsActive() && autoLaunchTimer.milliseconds() < 10000) {
+            while (opModeIsActive() && autoLaunchTimer.milliseconds() < 6000) {
                 BANK_SHOT_AUTO();
                 telemetry.addData("Launcher Countdown", autoLaunchTimer.seconds());
                 telemetry.update();
@@ -287,11 +307,24 @@ public class REVStarterBotTeleOpAutoJava extends LinearOpMode {
             coreHex.setPower(0);
             servo.setPower(0);
             // Back Up
-            autoDrive(0.5, 48, 48, 5000);
+            autoDrive(0.5, 28, 28, 5000);
             // Turn
-            autoDrive(0.5, -20, 20, 5000);
+            autoDrive(0.5, -16, 16, 5000);
             // Drive off Line
             autoDrive(1, -25, -25, 5000);
+        }
+    }
+
+    /**
+     * Either Alliance Autonomous
+     * The robot will drive off the line
+     */
+    private void doAutoBack() {
+        if (opModeIsActive()) {
+            telemetry.addData("RUNNING OPMODE", operationSelected);
+            telemetry.update();
+            // Back Up
+            autoDrive(0.5, -24, -24, 5000);
         }
     }
 }
